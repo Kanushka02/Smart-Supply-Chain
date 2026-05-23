@@ -3,6 +3,9 @@ const cors = require('cors');
 
 const app = express();
 const testRoutes = require('./routes/testRoutes');
+const dbTestRoutes = require('./routes/dbTestRoutes');
+
+app.use('/api', dbTestRoutes);
 
 // Use test routes
 app.use('/api', testRoutes);
