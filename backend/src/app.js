@@ -5,6 +5,7 @@ const app = express();
 const testRoutes = require('./routes/testRoutes');
 const dbTestRoutes = require('./routes/dbTestRoutes');
 const userRoutes = require('./routes/userRoutes');
+const productRoutes = require('./routes/productRoutes');
 
 // Middleware
 app.use(cors());
@@ -21,5 +22,6 @@ app.get('/', (req, res) => {
   res.send('Welcome to the Smart Supply Chain API');
 });
 app.use('/api', userRoutes);
+app.use('/api', productRoutes);
 
 module.exports = app;
