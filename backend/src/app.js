@@ -6,6 +6,7 @@ const testRoutes = require('./routes/testRoutes');
 const dbTestRoutes = require('./routes/dbTestRoutes');
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
+const orderRoutes =require('./routes/orderRoutes');
 
 // Middleware
 app.use(cors());
@@ -23,5 +24,6 @@ app.get('/', (req, res) => {
 });
 app.use('/api', userRoutes);
 app.use('/api', productRoutes);
+app.use('/api', orderRoutes);
 
 module.exports = app;
