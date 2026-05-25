@@ -1,4 +1,8 @@
 const prisma = require('../config/prisma');
+const {
+  successResponse,
+  errorResponse
+} = require('../utils/apiResponse');
 
 // CREATE USER
 exports.createUser = async (req, res) => {

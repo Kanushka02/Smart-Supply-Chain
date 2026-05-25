@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
+const errorHandler =require('./middleware/errorHandler');
 const testRoutes = require('./routes/testRoutes');
 const dbTestRoutes = require('./routes/dbTestRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -11,6 +12,7 @@ const orderRoutes =require('./routes/orderRoutes');
 // Middleware
 app.use(cors());
 app.use(express.json());
+
 
 app.use('/api', dbTestRoutes);
 
@@ -25,5 +27,7 @@ app.get('/', (req, res) => {
 app.use('/api', userRoutes);
 app.use('/api', productRoutes);
 app.use('/api', orderRoutes);
+
+app.use(errorHandler);
 
 module.exports = app;
