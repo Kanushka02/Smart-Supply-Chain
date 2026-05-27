@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink }
+from 'react-router-dom';
 
 import {
   FaHome,
@@ -7,33 +8,65 @@ import {
   FaUsers
 } from 'react-icons/fa';
 
+import {
+  useAuth
+} from '../../context/AuthContext';
+
 function Sidebar() {
 
-  const menuItems = [
+  const { user } =
+    useAuth();
+
+  const adminMenu = [
     {
       name: 'Dashboard',
-      path: '/',
+      path: '/admin',
       icon: <FaHome />
     },
 
     {
       name: 'Products',
-      path: '/products',
+      path: '/admin/products',
       icon: <FaBox />
     },
 
     {
       name: 'Orders',
-      path: '/orders',
+      path: '/admin/orders',
       icon: <FaShoppingCart />
     },
 
     {
       name: 'Users',
-      path: '/users',
+      path: '/admin/users',
       icon: <FaUsers />
     }
   ];
+
+  const supplierMenu = [
+    {
+      name: 'Dashboard',
+      path: '/supplier',
+      icon: <FaHome />
+    },
+
+    {
+      name: 'My Products',
+      path: '/supplier/products',
+      icon: <FaBox />
+    },
+
+    {
+      name: 'Orders',
+      path: '/supplier/orders',
+      icon: <FaShoppingCart />
+    }
+  ];
+
+  const menu =
+    user.role === 'ADMIN'
+      ? adminMenu
+      : supplierMenu;
 
   return (
     <div
@@ -43,8 +76,7 @@ function Sidebar() {
       w-64
       min-h-screen
       p-5
-      hidden
-      md:block
+      hidden md:block
       "
     >
 
@@ -52,8 +84,8 @@ function Sidebar() {
         className="
         text-2xl
         font-bold
-        mb-10
         text-orange-400
+        mb-10
         "
       >
         Supply Chain
@@ -61,7 +93,7 @@ function Sidebar() {
 
       <nav className="space-y-3">
 
-        {menuItems.map((item) => (
+        {menu.map(item => (
 
           <NavLink
             key={item.name}
@@ -69,24 +101,19 @@ function Sidebar() {
 
             className={({ isActive }) =>
               `
-              flex
-              items-center
+              flex items-center
               gap-3
-              p-3
-              rounded-xl
-              transition
+              p-3 rounded-xl
               ${
                 isActive
-                ? 'bg-orange-500'
-                : 'hover:bg-stone-800'
+                  ? 'bg-orange-500'
+                  : 'hover:bg-stone-800'
               }
               `
             }
           >
             {item.icon}
-
             {item.name}
-
           </NavLink>
 
         ))}
