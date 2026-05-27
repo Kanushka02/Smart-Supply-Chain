@@ -5,16 +5,16 @@ import {
 } from 'react-router-dom';
 
 import Dashboard
-from './pages/Dashboard/Dashboard';
+from './pages/admin/Dashboard/Dashboard';
 
 import Products
-from './pages/Products/Products';
+from './pages/admin/Products/Products';
 
 import Orders
-from './pages/Orders/Orders';
+from './pages/admin/Orders/Orders';
 
 import Users
-from './pages/Users/Users';
+from './pages/admin/Users/Users';
 
 function App() {
   return (
