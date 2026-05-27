@@ -1,10 +1,16 @@
+import DashboardLayout
+from '../../components/layout/DashboardLayout';
+
 function Products() {
+
   return (
-    <div className="p-6">
+    <DashboardLayout>
+
       <h1 className="text-3xl font-bold">
         Products
       </h1>
-    </div>
+
+    </DashboardLayout>
   );
 }
 
