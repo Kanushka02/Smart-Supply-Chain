@@ -7,10 +7,12 @@ exports.validateProduct = [
 
   body('price')
     .isFloat({ min: 0 })
+    .toFloat()
     .withMessage('Price must be a positive number'),
 
   body('stock')
     .isInt({ min: 0 })
+    .toInt()
     .withMessage('Stock must be 0 or greater'),
 
   (req, res, next) => {

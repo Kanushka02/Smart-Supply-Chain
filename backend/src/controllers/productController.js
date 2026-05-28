@@ -3,7 +3,9 @@ const prisma = require('../config/prisma');
 // CREATE PRODUCT
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, stock } = req.body;
+    const { name, description } = req.body;
+    const price = Number(req.body.price);
+    const stock = Number.parseInt(req.body.stock, 10);
 
     const product = await prisma.product.create({
       data: {
@@ -65,7 +67,9 @@ exports.updateProduct = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 
-    const { name, description, price, stock } = req.body;
+    const { name, description } = req.body;
+    const price = Number(req.body.price);
+    const stock = Number.parseInt(req.body.stock, 10);
 
     const updatedProduct = await prisma.product.update({
       where: { id },
