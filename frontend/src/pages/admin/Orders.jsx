@@ -29,7 +29,7 @@ function Orders() {
     await getOrders();
 
     setOrders(
-      res.data.data
+      res.data
     );
   };
 
