@@ -137,6 +137,50 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
+exports.getOrdersByUser =
+async (req, res) => {
+
+  try {
+
+    const { userId } =
+      req.params;
+
+    const orders =
+      await prisma.order.findMany({
+
+        where: {
+          userId:
+          Number(userId)
+        },
+
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
+
+          product: true
+        }
+      });
+
+    return successResponse(
+      res,
+      'Orders fetched',
+      orders
+    );
+
+  } catch (error) {
+
+    return errorResponse(
+      res,
+      error.message
+    );
+  }
+};
+
 // DELETE ORDER
 exports.deleteOrder = async (req, res) => {
   try {
