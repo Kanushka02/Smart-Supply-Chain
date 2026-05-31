@@ -49,15 +49,15 @@ function Dashboard() {
 
         setStats({
           products:
-          productsRes.data.data
+          productsRes.data
           .length,
 
           users:
-          usersRes.data.data
+          usersRes.data
           .length,
 
           orders:
-          ordersRes.data.data
+          ordersRes.data
           .length
         });
 
