@@ -13,8 +13,8 @@ export function AuthProvider({
 
   const [user] = useState({
     name: 'Kanushka',
-    role: 'ADMIN'
-    // SUPPLIER
+    role: 'SUPPLIER'
+    // ADMIN
   });
 
   return (
