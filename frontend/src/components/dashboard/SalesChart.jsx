@@ -26,8 +26,13 @@ function SalesChart() {
       rounded-2xl
       p-6
       shadow-md
-      h-[350px]
+      w-full
       "
+      style={{
+        height: '350px',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
     >
 
       <h2
@@ -40,10 +45,14 @@ function SalesChart() {
         Sales Analytics
       </h2>
 
-      <ResponsiveContainer
-        width="100%"
-        height="100%"
-      >
+      <div style={{
+        flex: 1,
+        minHeight: 0
+      }}>
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+        >
 
         <LineChart data={data}>
 
@@ -61,6 +70,7 @@ function SalesChart() {
         </LineChart>
 
       </ResponsiveContainer>
+      </div>
 
     </div>
   );
