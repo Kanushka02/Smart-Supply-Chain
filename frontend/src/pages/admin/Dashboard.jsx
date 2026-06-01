@@ -47,23 +47,35 @@ function Dashboard() {
           getOrders()
         ]);
 
+        const products = Array.isArray(productsRes.data) 
+          ? productsRes.data 
+          : [];
+        const users = Array.isArray(usersRes.data) 
+          ? usersRes.data 
+          : [];
+        const orders = Array.isArray(ordersRes.data) 
+          ? ordersRes.data 
+          : [];
+
         setStats({
           products:
-          productsRes.data
-          .length,
+          products.length,
 
           users:
-          usersRes.data
-          .length,
+          users.length,
 
           orders:
-          ordersRes.data
-          .length
+          orders.length
         });
 
       } catch (error) {
 
-        console.error(error);
+        console.error('Failed to fetch stats:', error);
+        setStats({
+          products: 0,
+          users: 0,
+          orders: 0
+        });
       }
     }
 
