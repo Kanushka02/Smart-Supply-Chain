@@ -25,12 +25,19 @@ function Orders() {
   const fetchOrders =
   async () => {
 
-    const res =
-    await getOrders();
+    try {
+      const res =
+      await getOrders();
 
-    setOrders(
-      res.data
-    );
+      setOrders(
+        Array.isArray(res.data)
+          ? res.data
+          : []
+      );
+    } catch (error) {
+      console.error('Failed to fetch orders:', error);
+      setOrders([]);
+    }
   };
 
   useEffect(() => {
@@ -40,9 +47,13 @@ function Orders() {
   const handleDelete =
   async (id) => {
 
-    await deleteOrder(id);
+    try {
+      await deleteOrder(id);
 
-    fetchOrders();
+      fetchOrders();
+    } catch (error) {
+      console.error('Failed to delete order:', error);
+    }
   };
 
   return (
