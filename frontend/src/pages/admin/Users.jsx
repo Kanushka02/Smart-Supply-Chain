@@ -1,60 +1,208 @@
-import { useEffect, useState } from 'react';
-import DashboardLayout from '../../components/layout/DashboardLayout';
-import API
-from '../../services/api';
+import {
+  useEffect,
+  useState
+}
+from 'react';
+
+import DashboardLayout
+from '../../components/layout/DashboardLayout';
+
+import UserTable
+from '../../components/users/UserTable';
+
+import UserModal
+from '../../components/users/UserModal';
+
+import {
+  getUsers,
+  createUser,
+  updateUser,
+  deleteUser
+}
+from '../../services/userService';
 
 function Users() {
 
-  const [users, setUsers] =
+  const [users,
+    setUsers] =
     useState([]);
 
+  const [search,
+    setSearch] =
+    useState('');
+
+  const [isModalOpen,
+    setIsModalOpen] =
+    useState(false);
+
+  const [editingUser,
+    setEditingUser] =
+    useState(null);
+
+  const fetchUsers =
+  async () => {
+
+    const res =
+      await getUsers();
+
+    setUsers(
+      res.data.data
+    );
+  };
+
   useEffect(() => {
-
-    API.get('/users')
-      .then(res => {
-        setUsers(
-          Array.isArray(res.data.data)
-            ? res.data.data
-            : []
-        );
-      })
-      .catch(err => {
-        console.error(err);
-      });
-
+    fetchUsers();
   }, []);
 
-  return (
-    <DashboardLayout>
-      <div className="p-6">
+  const handleSave =
+  async (userData) => {
 
-        <h1 className="text-3xl font-bold mb-4">
-          Users
+    if (editingUser) {
+
+      await updateUser(
+        editingUser.id,
+        userData
+      );
+
+    } else {
+
+      await createUser(
+        userData
+      );
+    }
+
+    fetchUsers();
+
+    setEditingUser(
+      null
+    );
+  };
+
+  const handleDelete =
+  async (id) => {
+
+    await deleteUser(id);
+
+    fetchUsers();
+  };
+
+  const filteredUsers =
+    users.filter(user =>
+      user.name
+      .toLowerCase()
+      .includes(
+        search
+        .toLowerCase()
+      )
+    );
+
+  return (
+
+    <DashboardLayout>
+
+      <div
+        className="
+        flex justify-between
+        items-center
+        mb-6
+        "
+      >
+
+        <h1
+          className="
+          text-3xl
+          font-bold
+          "
+        >
+          Users Management
         </h1>
 
-        <div className="space-y-3">
-          {(users || []).map(user => (
-            <div
-              key={user.id}
-              className="
-                bg-white
-                shadow-md
-                rounded-xl
-                p-4
-              "
-            >
-              <p className="font-semibold">
-                {user.name}
-              </p>
+        <button
+          onClick={() =>
+            setIsModalOpen(
+              true
+            )
+          }
 
-              <p className="text-gray-500">
-                {user.email}
-              </p>
-            </div>
-          ))}
-        </div>
+          className="
+          bg-orange-500
+          text-white
+          px-5 py-3
+          rounded-xl
+          "
+        >
+          Add User
+        </button>
 
       </div>
+
+      <input
+        type="text"
+        placeholder="Search users..."
+
+        value={search}
+
+        onChange={(e) =>
+          setSearch(
+            e.target.value
+          )
+        }
+
+        className="
+        w-full
+        border
+        p-3
+        rounded-xl
+        mb-5
+        "
+      />
+
+      <UserTable
+        users={
+          filteredUsers
+        }
+
+        onEdit={(user) => {
+
+          setEditingUser(
+            user
+          );
+
+          setIsModalOpen(
+            true
+          );
+        }}
+
+        onDelete={
+          handleDelete
+        }
+      />
+
+      <UserModal
+        isOpen={
+          isModalOpen
+        }
+
+        onClose={() => {
+
+          setIsModalOpen(
+            false
+          );
+
+          setEditingUser(
+            null
+          );
+        }}
+
+        onSave={
+          handleSave
+        }
+
+        editingUser={
+          editingUser
+        }
+      />
+
     </DashboardLayout>
   );
 }
