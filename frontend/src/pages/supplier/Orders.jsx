@@ -40,14 +40,24 @@ function Orders() {
   const fetchOrders =
   async () => {
 
-    const res =
-      await getSupplierOrders(
-        user.id
-      );
+    try {
+      const res =
+        await getSupplierOrders(
+          user.id
+        );
 
-    setOrders(
-      res.data.data
-    );
+      // Handle wrapped response format from successResponse
+      const ordersData = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
+
+      setOrders(ordersData);
+    } catch (error) {
+      console.error('Failed to fetch orders:', error);
+      setOrders([]);
+    }
   };
 
   useEffect(() => {
@@ -57,11 +67,16 @@ function Orders() {
   const handleSave =
   async (data) => {
 
-    await createOrder(
-      data
-    );
+    try {
+      await createOrder(
+        data
+      );
 
-    fetchOrders();
+      fetchOrders();
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Failed to create order:', error);
+    }
   };
 
   return (
