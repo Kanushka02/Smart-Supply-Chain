@@ -31,8 +31,12 @@ function OrderModal({
       .then(res => {
 
         setProducts(
-          res.data.data
+          res.data || []
         );
+      })
+      .catch(err => {
+        console.error('Failed to fetch products:', err);
+        setProducts([]);
       });
 
   }, []);
