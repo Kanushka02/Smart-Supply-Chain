@@ -42,12 +42,21 @@ function Users() {
   const fetchUsers =
   async () => {
 
-    const res =
-      await getUsers();
+    try {
+      const res =
+        await getUsers();
 
-    setUsers(
-      res.data.data
-    );
+      const usersData = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data?.data)
+          ? res.data.data
+          : [];
+
+      setUsers(usersData);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+      setUsers([]);
+    }
   };
 
   useEffect(() => {
@@ -57,33 +66,41 @@ function Users() {
   const handleSave =
   async (userData) => {
 
-    if (editingUser) {
+    try {
+      if (editingUser) {
 
-      await updateUser(
-        editingUser.id,
-        userData
+        await updateUser(
+          editingUser.id,
+          userData
+        );
+
+      } else {
+
+        await createUser(
+          userData
+        );
+      }
+
+      fetchUsers();
+
+      setEditingUser(
+        null
       );
-
-    } else {
-
-      await createUser(
-        userData
-      );
+    } catch (error) {
+      console.error('Failed to save user:', error);
     }
-
-    fetchUsers();
-
-    setEditingUser(
-      null
-    );
   };
 
   const handleDelete =
   async (id) => {
 
-    await deleteUser(id);
+    try {
+      await deleteUser(id);
 
-    fetchUsers();
+      fetchUsers();
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+    }
   };
 
   const filteredUsers =
