@@ -1,6 +1,7 @@
 function StatCard({
   title,
-  value
+  value,
+  icon
 }) {
 
   return (
@@ -9,28 +10,47 @@ function StatCard({
       className="
       bg-white
       rounded-2xl
-      shadow-md
       p-6
+      shadow-md
+      hover:shadow-lg
+      transition
       "
     >
 
-      <h3
+      <div
         className="
-        text-gray-500
-        mb-2
+        flex justify-between
+        items-center
         "
       >
-        {title}
-      </h3>
 
-      <h1
-        className="
-        text-3xl
-        font-bold
-        "
-      >
-        {value}
-      </h1>
+        <div>
+
+          <p
+            className="
+            text-gray-500
+            "
+          >
+            {title}
+          </p>
+
+          <h1
+            className="
+            text-3xl
+            font-bold
+            mt-2
+            "
+          >
+            {value}
+          </h1>
+
+        </div>
+
+        <div className="text-3xl">
+          {icon}
+        </div>
+
+      </div>
 
     </div>
   );
