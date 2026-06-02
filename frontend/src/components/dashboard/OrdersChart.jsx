@@ -64,7 +64,7 @@ function OrdersChart({
 
       <ResponsiveContainer
         width="100%"
-        height="100%"
+        height={300}
       >
 
         <LineChart
