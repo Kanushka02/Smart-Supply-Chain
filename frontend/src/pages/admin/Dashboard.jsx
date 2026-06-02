@@ -4,84 +4,88 @@ import {
 }
 from 'react';
 
+import {
+  FaBox,
+  FaUsers,
+  FaShoppingCart,
+  FaMoneyBill
+}
+from 'react-icons/fa';
+
 import DashboardLayout
 from '../../components/layout/DashboardLayout';
 
 import StatCard
 from '../../components/dashboard/StatCard';
 
-import SalesChart
-from '../../components/dashboard/SalesChart';
+import OrdersChart
+from '../../components/dashboard/OrdersChart';
 
-import {
-  getProducts,
-  getUsers,
-  getOrders
-}
-from '../../services/dashboardService';
+import InventoryChart
+from '../../components/dashboard/InventoryChart';
+
+import LowStock
+from '../../components/dashboard/LowStock';
+
+import API
+from '../../services/api';
 
 function Dashboard() {
 
-  const [stats,
-    setStats] =
-    useState({
-      products: 0,
-      users: 0,
-      orders: 0
-    });
+  const [products,
+    setProducts] =
+    useState([]);
+
+  const [users,
+    setUsers] =
+    useState([]);
+
+  const [orders,
+    setOrders] =
+    useState([]);
 
   useEffect(() => {
 
     async function
-    fetchStats() {
+    fetchData() {
 
-      try {
+      const [
+        productsRes,
+        usersRes,
+        ordersRes
+      ] = await Promise.all([
+        API.get('/products'),
+        API.get('/users'),
+        API.get('/orders')
+      ]);
 
-        const [
-          productsRes,
-          usersRes,
-          ordersRes
-        ] = await Promise.all([
-          getProducts(),
-          getUsers(),
-          getOrders()
-        ]);
+      setProducts(
+        productsRes
+        .data.data
+      );
 
-        const products = Array.isArray(productsRes.data) 
-          ? productsRes.data 
-          : [];
-        const users = Array.isArray(usersRes.data) 
-          ? usersRes.data 
-          : [];
-        const orders = Array.isArray(ordersRes.data) 
-          ? ordersRes.data 
-          : [];
+      setUsers(
+        usersRes
+        .data.data
+      );
 
-        setStats({
-          products:
-          products.length,
-
-          users:
-          users.length,
-
-          orders:
-          orders.length
-        });
-
-      } catch (error) {
-
-        console.error('Failed to fetch stats:', error);
-        setStats({
-          products: 0,
-          users: 0,
-          orders: 0
-        });
-      }
+      setOrders(
+        ordersRes
+        .data.data
+      );
     }
 
-    fetchStats();
+    fetchData();
 
   }, []);
+
+  const revenue =
+    orders.reduce(
+      (total, order) =>
+        total +
+        order.totalPrice,
+      0
+    );
 
   return (
 
@@ -100,7 +104,7 @@ function Dashboard() {
       <div
         className="
         grid
-        md:grid-cols-3
+        md:grid-cols-4
         gap-5
         mb-6
         "
@@ -109,27 +113,64 @@ function Dashboard() {
         <StatCard
           title="Products"
           value={
-            stats.products
+            products.length
           }
+          icon={<FaBox />}
         />
 
         <StatCard
           title="Users"
           value={
-            stats.users
+            users.length
           }
+          icon={<FaUsers />}
         />
 
         <StatCard
           title="Orders"
           value={
-            stats.orders
+            orders.length
+          }
+          icon={
+            <FaShoppingCart />
+          }
+        />
+
+        <StatCard
+          title="Revenue"
+          value={`Rs.
+          ${revenue}`}
+          icon={
+            <FaMoneyBill />
           }
         />
 
       </div>
 
-      <SalesChart />
+      <div
+        className="
+        grid
+        lg:grid-cols-2
+        gap-6
+        mb-6
+        "
+      >
+
+        <OrdersChart
+          orders={orders}
+        />
+
+        <InventoryChart
+          products={
+            products
+          }
+        />
+
+      </div>
+
+      <LowStock
+        products={products}
+      />
 
     </DashboardLayout>
   );
