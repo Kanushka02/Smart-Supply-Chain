@@ -49,30 +49,34 @@ function Dashboard() {
     async function
     fetchData() {
 
-      const [
-        productsRes,
-        usersRes,
-        ordersRes
-      ] = await Promise.all([
-        API.get('/products'),
-        API.get('/users'),
-        API.get('/orders')
-      ]);
+      try {
+        const [
+          productsRes,
+          usersRes,
+          ordersRes
+        ] = await Promise.all([
+          API.get('/products'),
+          API.get('/users'),
+          API.get('/orders')
+        ]);
 
-      setProducts(
-        productsRes
-        .data.data
-      );
+        setProducts(
+          productsRes?.data?.data || []
+        );
 
-      setUsers(
-        usersRes
-        .data.data
-      );
+        setUsers(
+          usersRes?.data?.data || []
+        );
 
-      setOrders(
-        ordersRes
-        .data.data
-      );
+        setOrders(
+          ordersRes?.data?.data || []
+        );
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+        setProducts([]);
+        setUsers([]);
+        setOrders([]);
+      }
     }
 
     fetchData();
@@ -80,12 +84,12 @@ function Dashboard() {
   }, []);
 
   const revenue =
-    orders.reduce(
-      (total, order) =>
-        total +
-        order.totalPrice,
-      0
-    );
+  (orders || []).reduce(
+    (total, order) =>
+      total +
+      (order.totalPrice || 0),
+    0
+  );
 
   return (
 
@@ -113,7 +117,7 @@ function Dashboard() {
         <StatCard
           title="Products"
           value={
-            products.length
+            products?.length || 0
           }
           icon={<FaBox />}
         />
@@ -121,7 +125,7 @@ function Dashboard() {
         <StatCard
           title="Users"
           value={
-            users.length
+            users?.length || 0
           }
           icon={<FaUsers />}
         />
@@ -129,7 +133,7 @@ function Dashboard() {
         <StatCard
           title="Orders"
           value={
-            orders.length
+            orders?.length || 0
           }
           icon={
             <FaShoppingCart />
