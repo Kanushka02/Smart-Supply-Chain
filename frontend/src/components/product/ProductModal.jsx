@@ -1,5 +1,12 @@
-import { useState, useEffect }
+import { useState }
 from 'react';
+
+const emptyProduct = {
+  name: '',
+  description: '',
+  price: '',
+  stock: ''
+};
 
 function ProductModal({
   isOpen,
@@ -9,20 +16,9 @@ function ProductModal({
 }) {
 
   const [formData, setFormData] =
-    useState({
-      name: '',
-      description: '',
-      price: '',
-      stock: ''
-    });
-
-  useEffect(() => {
-
-    if (editingProduct) {
-      setFormData(editingProduct);
-    }
-
-  }, [editingProduct]);
+    useState(
+      editingProduct || emptyProduct
+    );
 
   const handleChange = (e) => {
 
@@ -53,6 +49,7 @@ function ProductModal({
       flex justify-center
       items-center
       z-50
+      px-4
       "
     >
 
@@ -61,7 +58,9 @@ function ProductModal({
         bg-white
         rounded-2xl
         p-6
-        w-[450px]
+        w-full
+        max-w-[450px]
+        shadow-card
         "
       >
 
@@ -148,10 +147,12 @@ function ProductModal({
 
             <button
               className="
-              bg-orange-500
+              bg-primary
               text-white
               px-5 py-3
               rounded-xl
+              hover:bg-orange-600
+              transition
               "
             >
               Save
@@ -164,6 +165,8 @@ function ProductModal({
               bg-gray-300
               px-5 py-3
               rounded-xl
+              hover:bg-gray-400
+              transition
               "
             >
               Cancel

@@ -5,7 +5,7 @@ import {
 from 'react-icons/fa';
 
 function OrderTable({
-  orders,
+  orders = [],
   onDelete
 }) {
 
@@ -41,11 +41,11 @@ function OrderTable({
       bg-white
       rounded-2xl
       shadow-card
-      overflow-hidden
+      overflow-x-auto
       "
     >
 
-      <table className="w-full">
+      <table className="min-w-[760px] w-full">
 
         <thead
           className="
@@ -120,21 +120,29 @@ function OrderTable({
 
               <td className="p-4">
 
-                <button
-                  onClick={() =>
-                    onDelete(
-                      order.id
-                    )
-                  }
+                {onDelete ? (
+                  <button
+                    type="button"
+                    aria-label={`Delete order ${order.id}`}
+                    onClick={() =>
+                      onDelete(
+                        order.id
+                      )
+                    }
 
-                  className="
-                  text-red-500
-                  hover:text-red-700
-                  transition
-                  "
-                >
-                  <FaTrash />
-                </button>
+                    className="
+                    text-red-500
+                    hover:text-red-700
+                    transition
+                    "
+                  >
+                    <FaTrash />
+                  </button>
+                ) : (
+                  <span className="text-sm text-gray-400">
+                    -
+                  </span>
+                )}
 
               </td>
 
