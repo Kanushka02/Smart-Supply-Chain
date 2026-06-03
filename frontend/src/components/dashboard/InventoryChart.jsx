@@ -27,10 +27,11 @@ function InventoryChart({
     <div
       className="
       bg-white
-      rounded-2xl
+      rounded-[24px]
       p-6
-      shadow-md
+      shadow-card
       h-[350px]
+      min-w-0
       "
     >
 
@@ -63,6 +64,8 @@ function InventoryChart({
 
           <Bar
             dataKey="stock"
+            fill="#f97316"
+            radius={[8, 8, 0, 0]}
           />
 
         </BarChart>

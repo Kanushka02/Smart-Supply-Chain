@@ -13,9 +13,9 @@ function LowStock({
     <div
       className="
       bg-white
-      rounded-2xl
+      rounded-[24px]
       p-6
-      shadow-md
+      shadow-card
       "
     >
 
@@ -32,7 +32,16 @@ function LowStock({
       {
         lowStock.length === 0
         ? (
-          <p>
+          <p
+            className="
+            rounded-xl
+            bg-green-50
+            p-4
+            text-sm
+            font-medium
+            text-green-700
+            "
+          >
             All products
             have enough stock
           </p>
@@ -48,7 +57,8 @@ function LowStock({
 
               className="
               flex justify-between
-              border-b py-3
+              border-b border-gray-100
+              py-3
               "
             >
 
