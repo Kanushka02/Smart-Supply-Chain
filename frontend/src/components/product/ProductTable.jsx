@@ -1,6 +1,7 @@
 import {
   FaEdit,
-  FaTrash
+  FaTrash,
+  FaBox
 } from 'react-icons/fa';
 
 function ProductTable({
@@ -9,13 +10,38 @@ function ProductTable({
   onDelete
 }) {
 
+  if (products.length === 0) {
+    return (
+      <div
+        className="
+        bg-white
+        rounded-2xl
+        shadow-card
+        overflow-hidden
+        p-12
+        text-center
+        "
+      >
+        <div className="text-5xl text-gray-300 mb-4 flex justify-center">
+          <FaBox />
+        </div>
+        <h3 className="text-xl font-semibold text-gray-600 mb-2">
+          No products found
+        </h3>
+        <p className="text-gray-400">
+          Start by adding your first product
+        </p>
+      </div>
+    );
+  }
+
   return (
 
     <div
       className="
       bg-white
       rounded-2xl
-      shadow-md
+      shadow-card
       overflow-hidden
       "
     >
@@ -59,6 +85,8 @@ function ProductTable({
               key={product.id}
               className="
               border-t
+              hover:bg-gray-50
+              transition
               "
             >
 
@@ -85,6 +113,8 @@ function ProductTable({
                     }
                     className="
                     text-blue-500
+                    hover:text-blue-700
+                    transition
                     "
                   >
                     <FaEdit />
@@ -98,6 +128,8 @@ function ProductTable({
                     }
                     className="
                     text-red-500
+                    hover:text-red-700
+                    transition
                     "
                   >
                     <FaTrash />

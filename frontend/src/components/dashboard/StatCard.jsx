@@ -9,11 +9,13 @@ function StatCard({
     <div
       className="
       bg-white
-      rounded-2xl
+      rounded-xl2
       p-6
-      shadow-md
+      shadow-card
       hover:shadow-lg
       transition
+      border-l-4
+      border-primary
       "
     >
 
@@ -29,6 +31,7 @@ function StatCard({
           <p
             className="
             text-gray-500
+            text-sm
             "
           >
             {title}
@@ -39,6 +42,7 @@ function StatCard({
             text-3xl
             font-bold
             mt-2
+            text-secondary
             "
           >
             {value}
@@ -46,7 +50,7 @@ function StatCard({
 
         </div>
 
-        <div className="text-3xl">
+        <div className="text-3xl text-primary">
           {icon}
         </div>
 
