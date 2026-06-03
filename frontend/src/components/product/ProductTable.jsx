@@ -42,12 +42,13 @@ function ProductTable({
       bg-white
       rounded-2xl
       shadow-card
-      overflow-hidden
+      overflow-x-auto
       "
     >
 
       <table
         className="
+        min-w-[680px]
         w-full
         text-left
         "
@@ -108,6 +109,8 @@ function ProductTable({
                 <div className="flex gap-3">
 
                   <button
+                    type="button"
+                    aria-label={`Edit ${product.name}`}
                     onClick={() =>
                       onEdit(product)
                     }
@@ -121,9 +124,11 @@ function ProductTable({
                   </button>
 
                   <button
+                    type="button"
+                    aria-label={`Delete ${product.name}`}
                     onClick={() =>
                       onDelete(
-                        product.id
+                        product
                       )
                     }
                     className="

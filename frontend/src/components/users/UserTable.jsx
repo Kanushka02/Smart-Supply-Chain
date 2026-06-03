@@ -43,12 +43,13 @@ function UserTable({
       bg-white
       rounded-2xl
       shadow-card
-      overflow-hidden
+      overflow-x-auto
       "
     >
 
       <table
         className="
+        min-w-[840px]
         w-full
         "
       >
@@ -156,6 +157,8 @@ function UserTable({
                 <div className="flex gap-3">
 
                   <button
+                    type="button"
+                    aria-label={`Edit ${user.name}`}
                     onClick={() =>
                       onEdit(user)
                     }
@@ -170,9 +173,11 @@ function UserTable({
                   </button>
 
                   <button
+                    type="button"
+                    aria-label={`Delete ${user.name}`}
                     onClick={() =>
                       onDelete(
-                        user.id
+                        user
                       )
                     }
 

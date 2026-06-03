@@ -10,6 +10,12 @@ import toast
 import DashboardLayout
 from '../../components/layout/DashboardLayout';
 
+import ConfirmDialog
+from '../../components/common/ConfirmDialog';
+
+import LoadingState
+from '../../components/common/LoadingState';
+
 import UserTable
 from '../../components/users/UserTable';
 
@@ -42,6 +48,14 @@ function Users() {
     setEditingUser] =
     useState(null);
 
+  const [deletingUser,
+    setDeletingUser] =
+    useState(null);
+
+  const [loading,
+    setLoading] =
+    useState(true);
+
   const fetchUsers =
   async () => {
 
@@ -62,11 +76,37 @@ function Users() {
         'Failed to load users'
       );
       setUsers([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    async function loadUsers() {
+
+      try {
+        const res =
+          await getUsers();
+
+        const usersData = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.data)
+            ? res.data.data
+            : [];
+
+        setUsers(usersData);
+      } catch (error) {
+        console.error('Failed to fetch users:', error);
+        toast.error(
+          'Failed to load users'
+        );
+        setUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadUsers();
   }, []);
 
   const handleSave =
@@ -109,22 +149,22 @@ function Users() {
   };
 
   const handleDelete =
-  async (id) => {
+  (user) => {
+    setDeletingUser(user);
+  };
 
-    const confirmDelete =
-      window.confirm(
-        'Delete this user?'
-      );
-
-    if (!confirmDelete)
-      return;
-
+  const confirmDelete =
+  async () => {
     try {
-      await deleteUser(id);
+      await deleteUser(
+        deletingUser.id
+      );
 
       toast.success(
         'User Deleted'
       );
+
+      setDeletingUser(null);
 
       fetchUsers();
     } catch (error) {
@@ -151,8 +191,10 @@ function Users() {
 
       <div
         className="
-        flex justify-between
-        items-center
+        flex flex-col
+        gap-4
+        sm:flex-row sm:justify-between
+        sm:items-center
         mb-6
         "
       >
@@ -180,6 +222,8 @@ function Users() {
           rounded-xl
           hover:bg-orange-600
           transition
+          w-full
+          sm:w-auto
           "
         >
           Add User
@@ -211,28 +255,35 @@ function Users() {
         "
       />
 
-      <UserTable
-        users={
-          filteredUsers
-        }
+      {loading ? (
+        <LoadingState label="Loading users" />
+      ) : (
+        <UserTable
+          users={
+            filteredUsers
+          }
 
-        onEdit={(user) => {
+          onEdit={(user) => {
 
-          setEditingUser(
-            user
-          );
+            setEditingUser(
+              user
+            );
 
-          setIsModalOpen(
-            true
-          );
-        }}
+            setIsModalOpen(
+              true
+            );
+          }}
 
-        onDelete={
-          handleDelete
-        }
-      />
+          onDelete={
+            handleDelete
+          }
+        />
+      )}
 
       <UserModal
+        key={
+          editingUser?.id || 'new-user'
+        }
         isOpen={
           isModalOpen
         }
@@ -254,6 +305,20 @@ function Users() {
 
         editingUser={
           editingUser
+        }
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(
+          deletingUser
+        )}
+        title="Delete user"
+        message={`Delete ${deletingUser?.name || 'this user'}? This action cannot be undone.`}
+        onCancel={() =>
+          setDeletingUser(null)
+        }
+        onConfirm={
+          confirmDelete
         }
       />
 

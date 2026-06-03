@@ -1,8 +1,16 @@
 import {
-  useState,
-  useEffect
+  useState
 }
 from 'react';
+
+const emptyUser = {
+  name: '',
+  email: '',
+  password: '',
+  role: 'SUPPLIER',
+  companyName: '',
+  phone: ''
+};
 
 function UserModal({
   isOpen,
@@ -13,27 +21,14 @@ function UserModal({
 
   const [formData,
     setFormData] =
-    useState({
-      name: '',
-      email: '',
-      password: '',
-      role: 'SUPPLIER',
-      companyName: '',
-      phone: ''
-    });
-
-  useEffect(() => {
-
-    if (editingUser) {
-
-      setFormData({
-        ...editingUser,
-        password: ''
-      });
-
-    }
-
-  }, [editingUser]);
+    useState(
+      editingUser
+        ? {
+          ...editingUser,
+          password: ''
+        }
+        : emptyUser
+    );
 
   const handleChange =
   (e) => {
@@ -67,6 +62,7 @@ function UserModal({
       flex justify-center
       items-center
       z-50
+      px-4
       "
     >
 
@@ -75,7 +71,9 @@ function UserModal({
         bg-white
         p-6
         rounded-2xl
-        w-[450px]
+        w-full
+        max-w-[450px]
+        shadow-card
         "
       >
 
@@ -225,11 +223,13 @@ function UserModal({
 
           <button
             className="
-            bg-orange-500
+            bg-primary
             text-white
             px-5 py-3
             rounded-xl
             w-full
+            hover:bg-orange-600
+            transition
             "
           >
             Save User
