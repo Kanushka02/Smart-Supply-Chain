@@ -1,5 +1,6 @@
 import {
-  FaTrash
+  FaTrash,
+  FaShoppingCart
 }
 from 'react-icons/fa';
 
@@ -8,13 +9,38 @@ function OrderTable({
   onDelete
 }) {
 
+  if (orders.length === 0) {
+    return (
+      <div
+        className="
+        bg-white
+        rounded-2xl
+        shadow-card
+        overflow-hidden
+        p-12
+        text-center
+        "
+      >
+        <div className="text-5xl text-gray-300 mb-4 flex justify-center">
+          <FaShoppingCart />
+        </div>
+        <h3 className="text-xl font-semibold text-gray-600 mb-2">
+          No orders found
+        </h3>
+        <p className="text-gray-400">
+          Orders will appear here once customers place them
+        </p>
+      </div>
+    );
+  }
+
   return (
 
     <div
       className="
       bg-white
       rounded-2xl
-      shadow-md
+      shadow-card
       overflow-hidden
       "
     >
@@ -29,23 +55,23 @@ function OrderTable({
 
           <tr>
 
-            <th className="p-4">
+            <th className="p-4 text-left">
               User
             </th>
 
-            <th className="p-4">
+            <th className="p-4 text-left">
               Product
             </th>
 
-            <th className="p-4">
+            <th className="p-4 text-left">
               Quantity
             </th>
 
-            <th className="p-4">
+            <th className="p-4 text-left">
               Total
             </th>
 
-            <th className="p-4">
+            <th className="p-4 text-left">
               Actions
             </th>
 
@@ -61,6 +87,8 @@ function OrderTable({
               key={order.id}
               className="
               border-t
+              hover:bg-gray-50
+              transition
               "
             >
 
@@ -101,6 +129,8 @@ function OrderTable({
 
                   className="
                   text-red-500
+                  hover:text-red-700
+                  transition
                   "
                 >
                   <FaTrash />

@@ -1,6 +1,7 @@
 import {
   FaEdit,
-  FaTrash
+  FaTrash,
+  FaUsers
 }
 from 'react-icons/fa';
 
@@ -10,13 +11,38 @@ function UserTable({
   onDelete
 }) {
 
+  if (users.length === 0) {
+    return (
+      <div
+        className="
+        bg-white
+        rounded-2xl
+        shadow-card
+        overflow-hidden
+        p-12
+        text-center
+        "
+      >
+        <div className="text-5xl text-gray-300 mb-4 flex justify-center">
+          <FaUsers />
+        </div>
+        <h3 className="text-xl font-semibold text-gray-600 mb-2">
+          No users found
+        </h3>
+        <p className="text-gray-400">
+          Users will appear here once they register
+        </p>
+      </div>
+    );
+  }
+
   return (
 
     <div
       className="
       bg-white
       rounded-2xl
-      shadow-md
+      shadow-card
       overflow-hidden
       "
     >
@@ -35,23 +61,23 @@ function UserTable({
 
           <tr>
 
-            <th className="p-4">
+            <th className="p-4 text-left">
               Name
             </th>
 
-            <th className="p-4">
+            <th className="p-4 text-left">
               Email
             </th>
 
-            <th className="p-4">
+            <th className="p-4 text-left">
               Role
             </th>
 
-            <th className="p-4">
+            <th className="p-4 text-left">
               Status
             </th>
 
-            <th className="p-4">
+            <th className="p-4 text-left">
               Actions
             </th>
 
@@ -67,6 +93,8 @@ function UserTable({
               key={user.id}
               className="
               border-t
+              hover:bg-gray-50
+              transition
               "
             >
 
@@ -85,6 +113,7 @@ function UserTable({
                   px-3 py-1
                   rounded-full
                   text-sm
+                  font-medium
                   ${
                     user.role
                     === 'ADMIN'
@@ -105,6 +134,7 @@ function UserTable({
                   px-3 py-1
                   rounded-full
                   text-sm
+                  font-medium
                   ${
                     user.isActive
                     ? 'bg-green-100 text-green-600'
@@ -132,6 +162,8 @@ function UserTable({
 
                     className="
                     text-blue-500
+                    hover:text-blue-700
+                    transition
                     "
                   >
                     <FaEdit />
@@ -146,6 +178,8 @@ function UserTable({
 
                     className="
                     text-red-500
+                    hover:text-red-700
+                    transition
                     "
                   >
                     <FaTrash />
