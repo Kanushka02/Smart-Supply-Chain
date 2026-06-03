@@ -10,6 +10,9 @@ function Navbar() {
       flex
       justify-between
       items-center
+      sticky
+      top-0
+      z-10
       "
     >
 
@@ -17,6 +20,7 @@ function Navbar() {
         className="
         text-2xl
         font-semibold
+        text-secondary
         "
       >
         Dashboard
@@ -29,7 +33,7 @@ function Navbar() {
         gap-4
         "
       >
-        <span className="text-gray-600">
+        <span className="text-gray-600 font-medium">
           Admin
         </span>
 
@@ -38,7 +42,8 @@ function Navbar() {
           w-10
           h-10
           rounded-full
-          bg-orange-500
+          bg-primary
+          shadow-md
           "
         />
       </div>

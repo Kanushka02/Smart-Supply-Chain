@@ -5,14 +5,15 @@ import {
   FaHome,
   FaBox,
   FaShoppingCart,
-  FaUsers
+  FaUsers,
+  FaTimes
 } from 'react-icons/fa';
 
 import {
   useAuth
 } from '../../context/AuthContext';
 
-function Sidebar() {
+function Sidebar({ onClose }) {
 
   const { user } =
     useAuth();
@@ -71,21 +72,38 @@ function Sidebar() {
   return (
     <div
       className="
-      bg-stone-900
+      bg-secondary
       text-white
       w-64
       min-h-screen
       p-5
-      hidden md:block
+      relative
       "
     >
+
+      {/* Close button for mobile */}
+      <button
+        onClick={onClose}
+        className="
+        lg:hidden
+        absolute
+        right-5
+        top-5
+        text-2xl
+        hover:text-orange-400
+        transition
+        "
+      >
+        <FaTimes />
+      </button>
 
       <h1
         className="
         text-2xl
         font-bold
-        text-orange-400
+        text-primary
         mb-10
+        mt-8 lg:mt-0
         "
       >
         Supply Chain
@@ -104,13 +122,18 @@ function Sidebar() {
               flex items-center
               gap-3
               p-3 rounded-xl
+              transition
               ${
                 isActive
-                  ? 'bg-orange-500'
+                  ? 'bg-primary'
                   : 'hover:bg-stone-800'
               }
               `
             }
+
+            onClick={() => {
+              if (onClose) onClose();
+            }}
           >
             {item.icon}
             {item.name}
