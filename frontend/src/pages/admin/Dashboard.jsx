@@ -12,6 +12,12 @@ import {
 }
 from 'react-icons/fa';
 
+import {
+  Oval
+}
+from
+'react-loader-spinner';
+
 import DashboardLayout
 from '../../components/layout/DashboardLayout';
 
@@ -44,10 +50,16 @@ function Dashboard() {
     setOrders] =
     useState([]);
 
+  const [loading,
+    setLoading] =
+    useState(true);
+
   useEffect(() => {
 
     async function
     fetchData() {
+
+      setLoading(true);
 
       try {
         const [
@@ -76,6 +88,8 @@ function Dashboard() {
         setProducts([]);
         setUsers([]);
         setOrders([]);
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -90,6 +104,27 @@ function Dashboard() {
       (order.totalPrice || 0),
     0
   );
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex justify-center items-center h-screen">
+          <Oval
+            height={100}
+            width={100}
+            color="#f97316"
+            wrapperStyle={{}}
+            wrapperClass=""
+            visible={true}
+            ariaLabel='oval-loading'
+            secondaryColor="#e5e7eb"
+            strokeWidth={2}
+            strokeWidthSecondary={2}
+          />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
 

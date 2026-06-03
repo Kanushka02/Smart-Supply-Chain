@@ -4,6 +4,9 @@ import {
 }
 from 'react';
 
+import toast
+  from 'react-hot-toast';
+
 import DashboardLayout
 from '../../components/layout/DashboardLayout';
 
@@ -55,6 +58,9 @@ function Users() {
       setUsers(usersData);
     } catch (error) {
       console.error('Failed to fetch users:', error);
+      toast.error(
+        'Failed to load users'
+      );
       setUsers([]);
     }
   };
@@ -74,10 +80,18 @@ function Users() {
           userData
         );
 
+        toast.success(
+          'User Updated'
+        );
+
       } else {
 
         await createUser(
           userData
+        );
+
+        toast.success(
+          'User Created'
         );
       }
 
@@ -88,18 +102,36 @@ function Users() {
       );
     } catch (error) {
       console.error('Failed to save user:', error);
+      toast.error(
+        'Something went wrong'
+      );
     }
   };
 
   const handleDelete =
   async (id) => {
 
+    const confirmDelete =
+      window.confirm(
+        'Delete this user?'
+      );
+
+    if (!confirmDelete)
+      return;
+
     try {
       await deleteUser(id);
+
+      toast.success(
+        'User Deleted'
+      );
 
       fetchUsers();
     } catch (error) {
       console.error('Failed to delete user:', error);
+      toast.error(
+        'Failed to delete user'
+      );
     }
   };
 
@@ -142,10 +174,12 @@ function Users() {
           }
 
           className="
-          bg-orange-500
+          bg-primary
           text-white
           px-5 py-3
           rounded-xl
+          hover:bg-orange-600
+          transition
           "
         >
           Add User
@@ -168,9 +202,12 @@ function Users() {
         className="
         w-full
         border
+        border-gray-300
         p-3
         rounded-xl
         mb-5
+        focus:outline-none
+        focus:border-primary
         "
       />
 

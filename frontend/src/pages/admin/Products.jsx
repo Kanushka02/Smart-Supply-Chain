@@ -3,6 +3,9 @@ import {
   useState
 } from 'react';
 
+import toast
+  from 'react-hot-toast';
+
 import DashboardLayout
 from '../../components/layout/DashboardLayout';
 
@@ -54,6 +57,9 @@ function Products() {
     } catch (error) {
 
       console.error(error);
+      toast.error(
+        'Failed to load products'
+      );
     }
   };
 
@@ -73,10 +79,18 @@ function Products() {
           productData
         );
 
+        toast.success(
+          'Product Updated'
+        );
+
       } else {
 
         await createProduct(
           productData
+        );
+
+        toast.success(
+          'Product Added'
         );
       }
 
@@ -86,21 +100,39 @@ function Products() {
 
     } catch (error) {
       console.error(error);
+      toast.error(
+        'Something went wrong'
+      );
     }
   };
 
   const handleDelete =
     async (id) => {
 
+    const confirmDelete =
+      window.confirm(
+        'Delete this product?'
+      );
+
+    if (!confirmDelete)
+      return;
+
     try {
 
       await deleteProduct(id);
+
+      toast.success(
+        'Product Deleted'
+      );
 
       fetchProducts();
 
     } catch (error) {
 
       console.error(error);
+      toast.error(
+        'Failed to delete product'
+      );
     }
   };
 
@@ -130,10 +162,12 @@ function Products() {
           }
 
           className="
-          bg-orange-500
+          bg-primary
           text-white
           px-5 py-3
           rounded-xl
+          hover:bg-orange-600
+          transition
           "
         >
           Add Product

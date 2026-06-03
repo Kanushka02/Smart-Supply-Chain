@@ -4,6 +4,9 @@ import {
 }
 from 'react';
 
+import toast
+  from 'react-hot-toast';
+
 import DashboardLayout
 from '../../components/layout/DashboardLayout';
 
@@ -36,6 +39,9 @@ function Orders() {
       );
     } catch (error) {
       console.error('Failed to fetch orders:', error);
+      toast.error(
+        'Failed to load orders'
+      );
       setOrders([]);
     }
   };
@@ -47,12 +53,27 @@ function Orders() {
   const handleDelete =
   async (id) => {
 
+    const confirmDelete =
+      window.confirm(
+        'Delete this order?'
+      );
+
+    if (!confirmDelete)
+      return;
+
     try {
       await deleteOrder(id);
+
+      toast.success(
+        'Order Deleted'
+      );
 
       fetchOrders();
     } catch (error) {
       console.error('Failed to delete order:', error);
+      toast.error(
+        'Failed to delete order'
+      );
     }
   };
 
