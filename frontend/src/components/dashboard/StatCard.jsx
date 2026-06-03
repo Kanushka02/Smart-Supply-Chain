@@ -9,13 +9,12 @@ function StatCard({
     <div
       className="
       bg-white
-      rounded-xl2
+      rounded-[24px]
       p-6
       shadow-card
-      hover:shadow-lg
+      hover:-translate-y-1
       transition
-      border-l-4
-      border-primary
+      duration-300
       "
     >
 
@@ -50,7 +49,16 @@ function StatCard({
 
         </div>
 
-        <div className="text-3xl text-primary">
+        <div
+          className="
+          flex h-12 w-12
+          items-center justify-center
+          rounded-2xl
+          bg-orange-50
+          text-2xl
+          text-primary
+          "
+        >
           {icon}
         </div>
 

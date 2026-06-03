@@ -11,7 +11,26 @@ function DashboardLayout({
 
   return (
 
-    <div className="flex">
+    <div
+      className="
+      flex
+      min-h-screen
+      bg-background
+      "
+    >
+
+      {open && (
+        <button
+          type="button"
+          aria-label="Close sidebar"
+          onClick={() => setOpen(false)}
+          className="
+          fixed inset-0 z-40
+          bg-black/40
+          lg:hidden
+          "
+        />
+      )}
 
       {/* Sidebar */}
       <div
@@ -31,18 +50,26 @@ function DashboardLayout({
       <div
         className="
         flex-1
-        bg-background
         min-h-screen
-        w-full lg:w-auto
+        min-w-0
         "
       >
 
         <Navbar />
 
-        <main className="p-6">
+        <main
+          className="
+          w-full
+          px-4 py-5
+          sm:px-6
+          lg:px-7 lg:py-6
+          "
+        >
           {/* Mobile menu button */}
           <button
+            type="button"
             onClick={() => setOpen(!open)}
+            aria-label="Open sidebar"
             className="
             lg:hidden
             mb-4

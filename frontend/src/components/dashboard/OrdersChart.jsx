@@ -45,10 +45,11 @@ function OrdersChart({
     <div
       className="
       bg-white
-      rounded-2xl
+      rounded-[24px]
       p-6
-      shadow-md
+      shadow-card
       h-[350px]
+      min-w-0
       "
     >
 
@@ -82,6 +83,13 @@ function OrdersChart({
           <Line
             type="monotone"
             dataKey="orders"
+            stroke="#f97316"
+            strokeWidth={3}
+            dot={{
+              r: 4,
+              strokeWidth: 2,
+              fill: '#ffffff'
+            }}
           />
 
         </LineChart>
