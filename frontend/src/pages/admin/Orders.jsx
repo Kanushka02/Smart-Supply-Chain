@@ -10,6 +10,12 @@ import toast
 import DashboardLayout
 from '../../components/layout/DashboardLayout';
 
+import ConfirmDialog
+from '../../components/common/ConfirmDialog';
+
+import LoadingState
+from '../../components/common/LoadingState';
+
 import OrderTable
 from '../../components/orders/OrderTable';
 
@@ -25,6 +31,14 @@ function Orders() {
     setOrders] =
     useState([]);
 
+  const [deletingOrderId,
+    setDeletingOrderId] =
+    useState(null);
+
+  const [loading,
+    setLoading] =
+    useState(true);
+
   const fetchOrders =
   async () => {
 
@@ -35,7 +49,9 @@ function Orders() {
       setOrders(
         Array.isArray(res.data)
           ? res.data
-          : []
+          : Array.isArray(res.data?.data)
+            ? res.data.data
+            : []
       );
     } catch (error) {
       console.error('Failed to fetch orders:', error);
@@ -43,30 +59,56 @@ function Orders() {
         'Failed to load orders'
       );
       setOrders([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchOrders();
+    async function loadOrders() {
+
+      try {
+        const res =
+        await getOrders();
+
+        setOrders(
+          Array.isArray(res.data)
+            ? res.data
+            : Array.isArray(res.data?.data)
+              ? res.data.data
+              : []
+        );
+      } catch (error) {
+        console.error('Failed to fetch orders:', error);
+        toast.error(
+          'Failed to load orders'
+        );
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadOrders();
   }, []);
 
   const handleDelete =
-  async (id) => {
+  (id) => {
+    setDeletingOrderId(id);
+  };
 
-    const confirmDelete =
-      window.confirm(
-        'Delete this order?'
-      );
-
-    if (!confirmDelete)
-      return;
-
+  const confirmDelete =
+  async () => {
     try {
-      await deleteOrder(id);
+      await deleteOrder(
+        deletingOrderId
+      );
 
       toast.success(
         'Order Deleted'
       );
+
+      setDeletingOrderId(null);
 
       fetchOrders();
     } catch (error) {
@@ -91,10 +133,28 @@ function Orders() {
         Orders
       </h1>
 
-      <OrderTable
-        orders={orders}
-        onDelete={
-          handleDelete
+      {loading ? (
+        <LoadingState label="Loading orders" />
+      ) : (
+        <OrderTable
+          orders={orders}
+          onDelete={
+            handleDelete
+          }
+        />
+      )}
+
+      <ConfirmDialog
+        isOpen={Boolean(
+          deletingOrderId
+        )}
+        title="Delete order"
+        message="Delete this order? This action cannot be undone."
+        onCancel={() =>
+          setDeletingOrderId(null)
+        }
+        onConfirm={
+          confirmDelete
         }
       />
 

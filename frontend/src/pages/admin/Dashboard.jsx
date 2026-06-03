@@ -12,14 +12,11 @@ import {
 }
 from 'react-icons/fa';
 
-import {
-  Oval
-}
-from
-'react-loader-spinner';
-
 import DashboardLayout
 from '../../components/layout/DashboardLayout';
+
+import LoadingState
+from '../../components/common/LoadingState';
 
 import StatCard
 from '../../components/dashboard/StatCard';
@@ -108,20 +105,7 @@ function Dashboard() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex justify-center items-center h-screen">
-          <Oval
-            height={100}
-            width={100}
-            color="#f97316"
-            wrapperStyle={{}}
-            wrapperClass=""
-            visible={true}
-            ariaLabel='oval-loading'
-            secondaryColor="#e5e7eb"
-            strokeWidth={2}
-            strokeWidthSecondary={2}
-          />
-        </div>
+        <LoadingState label="Loading dashboard" />
       </DashboardLayout>
     );
   }
@@ -143,7 +127,9 @@ function Dashboard() {
       <div
         className="
         grid
-        md:grid-cols-4
+        grid-cols-1
+        sm:grid-cols-2
+        xl:grid-cols-4
         gap-5
         mb-6
         "

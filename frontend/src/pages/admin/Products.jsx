@@ -9,6 +9,12 @@ import toast
 import DashboardLayout
 from '../../components/layout/DashboardLayout';
 
+import ConfirmDialog
+from '../../components/common/ConfirmDialog';
+
+import LoadingState
+from '../../components/common/LoadingState';
+
 import ProductTable
 from '../../components/product/ProductTable';
 
@@ -36,6 +42,14 @@ function Products() {
     setEditingProduct] =
     useState(null);
 
+  const [deletingProduct,
+    setDeletingProduct] =
+    useState(null);
+
+  const [loading,
+    setLoading] =
+    useState(true);
+
   const fetchProducts =
     async () => {
 
@@ -60,11 +74,40 @@ function Products() {
       toast.error(
         'Failed to load products'
       );
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProducts();
+    async function loadProducts() {
+      try {
+
+        const res =
+          await getProducts();
+
+        const payload = res.data;
+
+        setProducts(
+          Array.isArray(payload)
+            ? payload
+            : Array.isArray(payload?.data)
+              ? payload.data
+              : []
+        );
+
+      } catch (error) {
+
+        console.error(error);
+        toast.error(
+          'Failed to load products'
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProducts();
   }, []);
 
   const handleSave =
@@ -107,23 +150,23 @@ function Products() {
   };
 
   const handleDelete =
-    async (id) => {
+    (product) => {
+    setDeletingProduct(product);
+  };
 
-    const confirmDelete =
-      window.confirm(
-        'Delete this product?'
-      );
-
-    if (!confirmDelete)
-      return;
-
+  const confirmDelete =
+    async () => {
     try {
 
-      await deleteProduct(id);
+      await deleteProduct(
+        deletingProduct.id
+      );
 
       toast.success(
         'Product Deleted'
       );
+
+      setDeletingProduct(null);
 
       fetchProducts();
 
@@ -142,8 +185,11 @@ function Products() {
 
       <div
         className="
-        flex justify-between
-        items-center mb-6
+        flex flex-col
+        gap-4
+        sm:flex-row sm:justify-between
+        sm:items-center
+        mb-6
         "
       >
 
@@ -168,6 +214,8 @@ function Products() {
           rounded-xl
           hover:bg-orange-600
           transition
+          w-full
+          sm:w-auto
           "
         >
           Add Product
@@ -175,23 +223,30 @@ function Products() {
 
       </div>
 
-      <ProductTable
-        products={products || []}
-        onEdit={(product) => {
+      {loading ? (
+        <LoadingState label="Loading products" />
+      ) : (
+        <ProductTable
+          products={products || []}
+          onEdit={(product) => {
 
-          setEditingProduct(
-            product
-          );
+            setEditingProduct(
+              product
+            );
 
-          setIsModalOpen(true);
-        }}
+            setIsModalOpen(true);
+          }}
 
-        onDelete={
-          handleDelete
-        }
-      />
+          onDelete={
+            handleDelete
+          }
+        />
+      )}
 
       <ProductModal
+        key={
+          editingProduct?.id || 'new-product'
+        }
         isOpen={
           isModalOpen
         }
@@ -211,6 +266,20 @@ function Products() {
 
         editingProduct={
           editingProduct
+        }
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(
+          deletingProduct
+        )}
+        title="Delete product"
+        message={`Delete ${deletingProduct?.name || 'this product'}? This action cannot be undone.`}
+        onCancel={() =>
+          setDeletingProduct(null)
+        }
+        onConfirm={
+          confirmDelete
         }
       />
 
