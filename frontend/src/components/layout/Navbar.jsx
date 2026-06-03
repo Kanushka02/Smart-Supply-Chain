@@ -1,4 +1,11 @@
+import {
+  useAuth
+} from '../../context/useAuth';
+
 function Navbar() {
+  const { user } =
+    useAuth();
+
   return (
 
     <div
@@ -12,7 +19,9 @@ function Navbar() {
       items-center
       sticky
       top-0
-      z-10
+      z-30
+      border-b
+      border-gray-100
       "
     >
 
@@ -33,8 +42,16 @@ function Navbar() {
         gap-4
         "
       >
-        <span className="text-gray-600 font-medium">
-          Admin
+        <span
+          className="
+          text-sm
+          font-semibold
+          uppercase
+          tracking-wide
+          text-gray-600
+          "
+        >
+          {user?.role || 'User'}
         </span>
 
         <div
@@ -43,7 +60,8 @@ function Navbar() {
           h-10
           rounded-full
           bg-primary
-          shadow-md
+          shadow-lg
+          shadow-orange-500/20
           "
         />
       </div>

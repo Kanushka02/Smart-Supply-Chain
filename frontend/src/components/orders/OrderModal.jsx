@@ -31,7 +31,11 @@ function OrderModal({
       .then(res => {
 
         setProducts(
-          res.data || []
+          Array.isArray(res.data)
+            ? res.data
+            : Array.isArray(res.data?.data)
+              ? res.data.data
+              : []
         );
       })
       .catch(err => {
@@ -74,6 +78,7 @@ function OrderModal({
       flex justify-center
       items-center
       z-50
+      px-4
       "
     >
 
@@ -82,7 +87,9 @@ function OrderModal({
         bg-white
         p-6
         rounded-2xl
-        w-[400px]
+        w-full
+        max-w-[400px]
+        shadow-card
         "
       >
 
@@ -123,9 +130,10 @@ function OrderModal({
             w-full border
             p-3 rounded-xl
             "
+            required
           >
 
-            <option>
+            <option value="">
               Select Product
             </option>
 
@@ -168,14 +176,17 @@ function OrderModal({
             w-full border
             p-3 rounded-xl
             "
+            required
           />
 
           <button
             className="
-            bg-orange-500
+            bg-primary
             text-white
             px-5 py-3
             rounded-xl
+            hover:bg-orange-600
+            transition
             "
           >
             Create Order

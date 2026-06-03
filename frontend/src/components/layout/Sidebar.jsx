@@ -11,7 +11,7 @@ import {
 
 import {
   useAuth
-} from '../../context/AuthContext';
+} from '../../context/useAuth';
 
 function Sidebar({ onClose }) {
 
@@ -65,7 +65,7 @@ function Sidebar({ onClose }) {
   ];
 
   const menu =
-    user.role === 'ADMIN'
+    user?.role === 'ADMIN'
       ? adminMenu
       : supplierMenu;
 
@@ -78,6 +78,7 @@ function Sidebar({ onClose }) {
       min-h-screen
       p-5
       relative
+      shadow-card
       "
     >
 
@@ -123,10 +124,11 @@ function Sidebar({ onClose }) {
               gap-3
               p-3 rounded-xl
               transition
+              font-medium
               ${
                 isActive
-                  ? 'bg-primary'
-                  : 'hover:bg-stone-800'
+                  ? 'bg-primary text-white shadow-lg shadow-orange-500/20'
+                  : 'text-stone-300 hover:bg-stone-800 hover:text-white'
               }
               `
             }
