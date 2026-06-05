@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 
 const app = express();
+const authRoutes =require('./routes/authRoutes');
 const errorHandler =require('./middleware/errorHandler');
 const testRoutes = require('./routes/testRoutes');
 const dbTestRoutes = require('./routes/dbTestRoutes');
