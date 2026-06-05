@@ -25,6 +25,7 @@ app.use('/api', testRoutes);
 app.get('/', (req, res) => {
   res.send('Welcome to the Smart Supply Chain API');
 });
+app.use('/api/auth',authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', productRoutes);
 app.use('/api', orderRoutes);
