@@ -61,15 +61,21 @@ async (req, res) => {
     });
 
     res.status(201)
-    .json({
+      .json({
 
-      success: true,
+        success: true,
 
-      message:
-      'User registered',
+        message:
+        'User registered',
 
-      data: user
-    });
+        data: {
+
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        }
+      });
 
   } catch (error) {
 
