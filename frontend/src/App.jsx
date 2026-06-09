@@ -6,7 +6,13 @@ import {
 } from 'react-router-dom';
 
 import { useAuth }
-from './context/useAuth';
+from './context/AuthContext';
+
+import ProtectedRoute
+from './routes/ProtectedRoute';
+
+import Login
+from './pages/Login';
 
 // ADMIN
 import AdminDashboard
@@ -33,30 +39,57 @@ from './pages/supplier/Orders';
 
 function App() {
 
-  const { user } =
-    useAuth();
+  const {
+    user,
+    loading
+  } = useAuth();
+
+  if (loading)
+    return null;
 
   return (
+
     <BrowserRouter>
 
       <Routes>
 
-        {/* Default Redirect */}
+        {/* LOGIN */}
+
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+
+        {/* DEFAULT REDIRECT */}
 
         <Route
           path="/"
           element={
-            user.role === 'ADMIN'
+
+            user ? (
+
+              user.role
+              === 'ADMIN'
+
               ? (
                 <Navigate
                   to="/admin"
                 />
               )
+
               : (
                 <Navigate
                   to="/supplier"
                 />
               )
+
+            ) : (
+
+              <Navigate
+                to="/login"
+              />
+
+            )
           }
         />
 
@@ -64,39 +97,88 @@ function App() {
 
         <Route
           path="/admin"
-          element={<AdminDashboard />}
+
+          element={
+            <ProtectedRoute
+              role="ADMIN"
+            >
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/admin/products"
-          element={<AdminProducts />}
+
+          element={
+            <ProtectedRoute
+              role="ADMIN"
+            >
+              <AdminProducts />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/admin/orders"
-          element={<AdminOrders />}
+
+          element={
+            <ProtectedRoute
+              role="ADMIN"
+            >
+              <AdminOrders />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/admin/users"
-          element={<AdminUsers />}
+
+          element={
+            <ProtectedRoute
+              role="ADMIN"
+            >
+              <AdminUsers />
+            </ProtectedRoute>
+          }
         />
 
         {/* SUPPLIER */}
 
         <Route
           path="/supplier"
-          element={<SupplierDashboard />}
+
+          element={
+            <ProtectedRoute
+              role="SUPPLIER"
+            >
+              <SupplierDashboard />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/supplier/products"
-          element={<SupplierProducts />}
+
+          element={
+            <ProtectedRoute
+              role="SUPPLIER"
+            >
+              <SupplierProducts />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/supplier/orders"
-          element={<SupplierOrders />}
+
+          element={
+            <ProtectedRoute
+              role="SUPPLIER"
+            >
+              <SupplierOrders />
+            </ProtectedRoute>
+          }
         />
 
       </Routes>
