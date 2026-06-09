@@ -6,7 +6,7 @@ from 'react-router-dom';
 import {
   useAuth
 }
-from '../../context/AuthContext';
+from '../../context/useAuth';
 
 function Navbar() {
 
