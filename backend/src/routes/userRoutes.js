@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const auth = require('../middleware/authMiddleware');
+const role = require('../middleware/roleMiddleware');
 
 const {
   createUser,
@@ -11,14 +12,14 @@ const {
   deleteUser
 } = require('../controllers/userController');
 
-router.post('/users', auth, createUser);
+router.post('/users', auth, role('ADMIN'), createUser);
 
-router.get('/users', auth, getAllUsers);
+router.get('/users', auth, role('ADMIN'), getAllUsers);
 
-router.get('/users/:id', auth, getUserById);
+router.get('/users/:id', auth, role('ADMIN'), getUserById);
 
-router.put('/users/:id', auth, updateUser);
+router.put('/users/:id', auth, role('ADMIN'), updateUser);
 
-router.delete('/users/:id', auth, deleteUser);
+router.delete('/users/:id', auth, role('ADMIN'), deleteUser);
 
 module.exports = router;
