@@ -6,13 +6,15 @@ exports.createProduct = async (req, res) => {
     const { name, description } = req.body;
     const price = Number(req.body.price);
     const stock = Number.parseInt(req.body.stock, 10);
+    const supplierId = req.user.role === 'SUPPLIER' ? req.user.id : null;
 
     const product = await prisma.product.create({
       data: {
         name,
         description,
         price,
-        stock
+        stock,
+        supplierId
       }
     });
 
@@ -71,6 +73,25 @@ exports.updateProduct = async (req, res) => {
     const price = Number(req.body.price);
     const stock = Number.parseInt(req.body.stock, 10);
 
+    const existingProduct = await prisma.product.findUnique({
+      where: { id }
+    });
+
+    if (!existingProduct) {
+      return res.status(404).json({
+        message: 'Product not found'
+      });
+    }
+
+    if (
+      req.user.role === 'SUPPLIER' &&
+      existingProduct.supplierId !== req.user.id
+    ) {
+      return res.status(403).json({
+        message: 'Access denied'
+      });
+    }
+
     const updatedProduct = await prisma.product.update({
       where: { id },
       data: {
@@ -93,6 +114,22 @@ exports.updateProduct = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+
+    const existingProduct = await prisma.product.findUnique({
+      where: { id }
+    });
+
+    if (!existingProduct) {
+      return res.status(404).json({
+        message: 'Product not found'
+      });
+    }
+
+    if (req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        message: 'Access denied'
+      });
+    }
 
     await prisma.product.delete({
       where: { id }
