@@ -26,6 +26,7 @@ model User {
   isActive    Boolean    @default(true)
 
   orders      Order[]
+  products    Product[]  @relation("ProductOwner")
 
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -37,6 +38,9 @@ model Product {
   description String?
   price       Float
   stock       Int
+
+  supplierId  Int?
+  supplier    User?    @relation("ProductOwner", fields: [supplierId], references: [id], onDelete: SetNull)
 
   orders      Order[]
 
