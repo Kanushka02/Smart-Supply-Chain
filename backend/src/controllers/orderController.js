@@ -4,7 +4,8 @@ const { successResponse, errorResponse } = require('../utils/apiResponse');
 // CREATE ORDER
 exports.createOrder = async (req, res) => {
   try {
-    const { userId, productId, quantity } = req.body;
+    const { productId, quantity } = req.body;
+    const userId = req.user.id;
 
     // Check user exists
     const user = await prisma.user.findUnique({
@@ -73,21 +74,27 @@ exports.createOrder = async (req, res) => {
 // GET ALL ORDERS
 exports.getAllOrders = async (req, res) => {
   try {
+    const include = {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true
+        }
+      },
+      product: true
+    };
 
     const orders =
-      await prisma.order.findMany({
-        include: {
-  user: {
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true
-    }
-  },
-  product: true
-}
-      });
+      req.user.role === 'ADMIN'
+        ? await prisma.order.findMany({ include })
+        : await prisma.order.findMany({
+            where: {
+              userId: req.user.id
+            },
+            include
+          });
 
     res.status(200).json(orders);
 
@@ -128,6 +135,12 @@ exports.getOrderById = async (req, res) => {
       });
     }
 
+    if (req.user.role !== 'ADMIN' && order.userId !== req.user.id) {
+      return res.status(403).json({
+        message: 'Access denied'
+      });
+    }
+
     res.status(200).json(order);
 
   } catch (error) {
@@ -145,6 +158,15 @@ async (req, res) => {
 
     const { userId } =
       req.params;
+
+    if (
+      req.user.role !== 'ADMIN' &&
+      Number(userId) !== req.user.id
+    ) {
+      return res.status(403).json({
+        message: 'Access denied'
+      });
+    }
 
     const orders =
       await prisma.order.findMany({
@@ -179,6 +201,55 @@ async (req, res) => {
       res,
       error.message
     );
+  }
+};
+
+exports.updateOrder = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { quantity, productId, userId } = req.body;
+
+    const existingOrder = await prisma.order.findUnique({
+      where: { id }
+    });
+
+    if (!existingOrder) {
+      return res.status(404).json({
+        message: 'Order not found'
+      });
+    }
+
+    const nextProductId = productId ? Number(productId) : existingOrder.productId;
+    const nextUserId = userId ? Number(userId) : existingOrder.userId;
+    const nextQuantity = quantity ? Number(quantity) : existingOrder.quantity;
+
+    const product = await prisma.product.findUnique({
+      where: { id: nextProductId }
+    });
+
+    if (!product) {
+      return res.status(404).json({
+        message: 'Product not found'
+      });
+    }
+
+    const totalPrice = product.price * nextQuantity;
+
+    const updatedOrder = await prisma.order.update({
+      where: { id },
+      data: {
+        userId: nextUserId,
+        productId: nextProductId,
+        quantity: nextQuantity,
+        totalPrice
+      }
+    });
+
+    res.status(200).json(updatedOrder);
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to update order'
+    });
   }
 };
 
