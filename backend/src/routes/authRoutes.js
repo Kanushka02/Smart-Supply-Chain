@@ -6,7 +6,8 @@ express.Router();
 
 const {
   login,
-  register
+  register,
+  refreshToken
 }
 =
 require(
@@ -21,6 +22,11 @@ register
 router.post(
 '/login',
 login
+);
+
+router.post(
+'/refresh',
+refreshToken
 );
 
 module.exports =
