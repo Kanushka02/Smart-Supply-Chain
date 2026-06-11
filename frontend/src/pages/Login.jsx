@@ -62,7 +62,8 @@ function Login() {
       );
 
       login(
-        res.data.token,
+        res.data.accessToken,
+        res.data.refreshToken,
         res.data.user
       );
 
