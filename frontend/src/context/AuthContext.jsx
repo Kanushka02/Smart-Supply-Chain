@@ -52,11 +52,16 @@ export const AuthProvider =
   }, []);
 
   const login =
-  (token, user) => {
+  (accessToken, refreshToken, user) => {
 
     localStorage.setItem(
       'token',
-      token
+      accessToken
+    );
+
+    localStorage.setItem(
+      'refreshToken',
+      refreshToken
     );
 
     localStorage.setItem(
@@ -79,6 +84,10 @@ export const AuthProvider =
 
     localStorage.removeItem(
       'user'
+    );
+
+    localStorage.removeItem(
+      'refreshToken'
     );
 
     setUser(null);
