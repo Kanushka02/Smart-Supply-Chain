@@ -139,7 +139,7 @@ async (req, res) => {
       });
     }
 
-    const token =
+    const accessToken =
     jwt.sign(
 
       {
@@ -151,6 +151,21 @@ async (req, res) => {
       .JWT_SECRET,
 
       {
+        expiresIn: '15m'
+      }
+    );
+
+    const refreshToken =
+    jwt.sign(
+
+      {
+        id: user.id
+      },
+
+      process.env
+      .JWT_REFRESH_SECRET,
+
+      {
         expiresIn: '7d'
       }
     );
@@ -159,7 +174,8 @@ async (req, res) => {
 
       success: true,
 
-      token,
+      accessToken,
+      refreshToken,
 
       user: {
 
@@ -176,6 +192,87 @@ async (req, res) => {
     .json({
       message:
       error.message
+    });
+  }
+};
+
+exports.refreshToken =
+async (req, res) => {
+
+  try {
+
+    const {
+      refreshToken
+    } = req.body;
+
+    if (!refreshToken) {
+
+      return res
+      .status(401)
+      .json({
+
+        message:
+        'No refresh token'
+      });
+    }
+
+    const decoded =
+    jwt.verify(
+
+      refreshToken,
+
+      process.env
+      .JWT_REFRESH_SECRET
+    );
+
+    const user =
+    await prisma.user.findUnique({
+
+      where: {
+        id: decoded.id
+      }
+    });
+
+    if (!user) {
+
+      return res
+      .status(401)
+      .json({
+
+        message:
+        'Invalid refresh token'
+      });
+    }
+
+    const accessToken =
+    jwt.sign(
+
+      {
+        id: user.id,
+        role: user.role
+      },
+
+      process.env
+      .JWT_SECRET,
+
+      {
+        expiresIn:
+        '15m'
+      }
+    );
+
+    res.json({
+
+      accessToken
+    });
+
+  } catch {
+
+    res.status(401)
+    .json({
+
+      message:
+      'Invalid refresh token'
     });
   }
 };
