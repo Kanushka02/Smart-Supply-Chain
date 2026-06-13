@@ -12,15 +12,10 @@ const {
   deleteProduct
 } = require('../controllers/productController');
 
-const {
-  validateProduct
-} = require('../middleware/productValidation');
-
 router.post(
   '/products',
   auth,
   role('ADMIN', 'SUPPLIER'),
-  validateProduct,
   createProduct
 );
 
@@ -32,7 +27,6 @@ router.put(
   '/products/:id',
   auth,
   role('ADMIN', 'SUPPLIER'),
-  validateProduct,
   updateProduct
 );
 
