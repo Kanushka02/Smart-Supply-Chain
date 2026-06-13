@@ -1,30 +1,29 @@
 const prisma = require('../config/prisma');
+const { productSchema } = require('../validators/productValidator');
 
 // CREATE PRODUCT
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description } = req.body;
-    const price = Number(req.body.price);
-    const stock = Number.parseInt(req.body.stock, 10);
+    const parsedProduct = productSchema.parse({
+      ...req.body,
+      price: Number(req.body.price),
+      stock: Number.parseInt(req.body.stock, 10)
+    });
     const supplierId = req.user.role === 'SUPPLIER' ? req.user.id : null;
 
     const product = await prisma.product.create({
       data: {
-        name,
-        description,
-        price,
-        stock,
+        name: parsedProduct.name,
+        description: parsedProduct.description,
+        price: parsedProduct.price,
+        stock: parsedProduct.stock,
         supplierId
       }
     });
 
     res.status(201).json(product);
   } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      message: 'Failed to create product'
-    });
+    throw error;
   }
 };
 
@@ -69,9 +68,11 @@ exports.updateProduct = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 
-    const { name, description } = req.body;
-    const price = Number(req.body.price);
-    const stock = Number.parseInt(req.body.stock, 10);
+    const parsedProduct = productSchema.parse({
+      ...req.body,
+      price: Number(req.body.price),
+      stock: Number.parseInt(req.body.stock, 10)
+    });
 
     const existingProduct = await prisma.product.findUnique({
       where: { id }
@@ -95,18 +96,16 @@ exports.updateProduct = async (req, res) => {
     const updatedProduct = await prisma.product.update({
       where: { id },
       data: {
-        name,
-        description,
-        price,
-        stock
+        name: parsedProduct.name,
+        description: parsedProduct.description,
+        price: parsedProduct.price,
+        stock: parsedProduct.stock
       }
     });
 
     res.status(200).json(updatedProduct);
   } catch (error) {
-    res.status(500).json({
-      message: 'Failed to update product'
-    });
+    throw error;
   }
 };
 
