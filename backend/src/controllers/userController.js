@@ -1,20 +1,37 @@
 const prisma = require('../config/prisma');
+const bcrypt = require('bcryptjs');
 const {
   successResponse,
   errorResponse
 } = require('../utils/apiResponse');
+
+const ALLOWED_ROLES = new Set(['ADMIN', 'SUPPLIER']);
+
+const normalizeRole = (role, fallback = 'SUPPLIER') => {
+  const normalizedRole = String(role || fallback).toUpperCase();
+
+  return ALLOWED_ROLES.has(normalizedRole) ? normalizedRole : fallback;
+};
 
 // CREATE USER
 exports.createUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        message: 'Name, email, and password are required'
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const user = await prisma.user.create({
       data: {
         name,
         email,
-        password,
-        role
+        password: hashedPassword,
+        role: normalizeRole(role)
       }
     });
 
@@ -75,14 +92,19 @@ exports.updateUser = async (req, res) => {
 
     const { name, email, password, role } = req.body;
 
+    const data = {
+      ...(name ? { name } : {}),
+      ...(email ? { email } : {}),
+      ...(role ? { role: normalizeRole(role) } : {})
+    };
+
+    if (password) {
+      data.password = await bcrypt.hash(password, 10);
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: {
-        name,
-        email,
-        password,
-        role
-      }
+      data
     });
 
     res.status(200).json(updatedUser);
