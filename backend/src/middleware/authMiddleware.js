@@ -1,57 +1,35 @@
-const jwt =
-require(
-'jsonwebtoken'
-);
+const jwt = require('jsonwebtoken');
 
-module.exports =
-(req, res, next) => {
+const getBearerToken = (authorizationHeader) => {
+  if (!authorizationHeader || typeof authorizationHeader !== 'string') {
+    return null;
+  }
 
+  const [scheme, token] = authorizationHeader.split(' ');
+
+  if (scheme !== 'Bearer' || !token) {
+    return null;
+  }
+
+  return token;
+};
+
+module.exports = (req, res, next) => {
   try {
+    const token = getBearerToken(req.headers.authorization);
 
-    const authHeader =
-    req.headers
-    .authorization;
-
-    if (
-      !authHeader
-    ) {
-
-      return res
-      .status(401)
-      .json({
-
-        message:
-        'No token'
+    if (!token) {
+      return res.status(401).json({
+        message: 'No token'
       });
     }
 
-    const token =
-    authHeader.split(
-      ' '
-    )[1];
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
 
-    const decoded =
-    jwt.verify(
-
-      token,
-
-      process.env
-      .JWT_SECRET
-    );
-
-    req.user =
-    decoded;
-
-    next();
-
+    return next();
   } catch {
-
-    return res
-    .status(401)
-    .json({
-
-      message:
-      'Unauthorized'
+    return res.status(401).json({
+      message: 'Unauthorized'
     });
   }
 };
