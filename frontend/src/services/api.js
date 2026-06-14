@@ -8,6 +8,12 @@ axios.create({
   'http://localhost:5000/api'
 });
 
+const AUTH_PATHS = new Set([
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh'
+]);
+
 /*
 JWT AUTO ATTACH
 */
@@ -48,11 +54,16 @@ API.interceptors.response
 
     const originalRequest =
     error.config;
+    const requestPath =
+      originalRequest?.url || '';
+    const isAuthRequest =
+      AUTH_PATHS.has(requestPath);
 
     if (
       error.response?.status === 401 &&
       originalRequest &&
-      !originalRequest._retry
+      !originalRequest._retry &&
+      !isAuthRequest
     ) {
 
       originalRequest._retry = true;
