@@ -114,6 +114,7 @@ function Login() {
         rounded-3xl
         shadow-xl
         w-[400px]
+        max-w-[calc(100vw-2rem)]
         "
       >
 
@@ -185,6 +186,17 @@ function Login() {
           </button>
 
         </form>
+
+        <p className="mt-6 text-center text-sm text-slate-600">
+          Need an account?{' '}
+          <button
+            type="button"
+            onClick={() => navigate('/register')}
+            className="font-semibold text-orange-500 hover:text-orange-600"
+          >
+            Register
+          </button>
+        </p>
 
       </div>
 

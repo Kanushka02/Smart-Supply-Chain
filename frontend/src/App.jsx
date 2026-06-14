@@ -14,6 +14,9 @@ from './routes/ProtectedRoute';
 import Login
 from './pages/Login';
 
+import Register
+from './pages/Register';
+
 // ADMIN
 import AdminDashboard
 from './pages/admin/Dashboard';
@@ -58,6 +61,11 @@ function App() {
         <Route
           path="/login"
           element={<Login />}
+        />
+
+        <Route
+          path="/register"
+          element={<Register />}
         />
 
         {/* DEFAULT REDIRECT */}
