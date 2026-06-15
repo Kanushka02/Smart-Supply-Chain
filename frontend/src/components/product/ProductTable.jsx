@@ -48,7 +48,7 @@ function ProductTable({
 
       <table
         className="
-        min-w-[680px]
+        min-w-[760px]
         w-full
         text-left
         "
@@ -62,6 +62,10 @@ function ProductTable({
           <tr>
             <th className="p-4">
               Name
+            </th>
+
+            <th className="p-4">
+              Image
             </th>
 
             <th className="p-4">
@@ -93,6 +97,38 @@ function ProductTable({
 
               <td className="p-4">
                 {product.name}
+              </td>
+
+              <td className="p-4">
+                {product.image ? (
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="
+                    h-14
+                    w-14
+                    rounded-lg
+                    object-cover
+                    bg-gray-100
+                    "
+                  />
+                ) : (
+                  <div
+                    className="
+                    h-14
+                    w-14
+                    rounded-lg
+                    bg-gray-100
+                    text-gray-300
+                    flex
+                    items-center
+                    justify-center
+                    "
+                    aria-label="No product image"
+                  >
+                    <FaBox />
+                  </div>
+                )}
               </td>
 
               <td className="p-4">
