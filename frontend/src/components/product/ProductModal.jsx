@@ -1,11 +1,19 @@
-import { useState }
+import {
+  useEffect,
+  useState
+}
 from 'react';
+
+import {
+  FaImage
+} from 'react-icons/fa';
 
 const emptyProduct = {
   name: '',
   description: '',
   price: '',
-  stock: ''
+  stock: '',
+  image: null
 };
 
 function ProductModal({
@@ -20,12 +28,43 @@ function ProductModal({
       editingProduct || emptyProduct
     );
 
+  const [previewUrl, setPreviewUrl] =
+    useState(
+      editingProduct?.image || ''
+    );
+
+  useEffect(() => {
+    if (formData.image instanceof File) {
+      const nextPreviewUrl =
+        URL.createObjectURL(formData.image);
+
+      setPreviewUrl(nextPreviewUrl);
+
+      return () => {
+        URL.revokeObjectURL(nextPreviewUrl);
+      };
+    }
+
+    setPreviewUrl(formData.image || '');
+
+    return undefined;
+  }, [formData.image]);
+
   const handleChange = (e) => {
 
     setFormData({
       ...formData,
       [e.target.name]:
       e.target.value
+    });
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0] || null;
+
+    setFormData({
+      ...formData,
+      image: file
     });
   };
 
@@ -142,6 +181,63 @@ function ProductModal({
             "
             required
           />
+
+          <label
+            className="
+            block
+            border
+            rounded-xl
+            p-3
+            cursor-pointer
+            hover:bg-gray-50
+            transition
+            "
+          >
+            <span className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <FaImage />
+              Product Image
+            </span>
+
+            <input
+              type="file"
+              name="image"
+              accept="image/png,image/jpeg,image/jpg"
+              onChange={handleImageChange}
+              className="mt-3 block w-full text-sm"
+            />
+          </label>
+
+          {formData.image && (
+            <div
+              className="
+              flex
+              items-center
+              gap-3
+              rounded-xl
+              bg-gray-50
+              p-3
+              "
+            >
+              <img
+                src={previewUrl}
+                alt={formData.name || 'Product preview'}
+                className="
+                h-16
+                w-16
+                rounded-lg
+                object-cover
+                bg-gray-100
+                "
+              />
+              <span className="text-sm text-gray-600">
+                {
+                  formData.image instanceof File
+                    ? formData.image.name
+                    : 'Current product image'
+                }
+              </span>
+            </div>
+          )}
 
           <div className="flex gap-3">
 
