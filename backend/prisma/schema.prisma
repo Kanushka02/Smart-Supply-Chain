@@ -38,6 +38,7 @@ model Product {
   description String?
   price       Float
   stock       Int
+  image       String?
 
   supplierId  Int?
   supplier    User?    @relation("ProductOwner", fields: [supplierId], references: [id], onDelete: SetNull)
