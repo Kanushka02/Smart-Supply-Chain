@@ -3,6 +3,7 @@ const router = express.Router();
 
 const auth = require('../middleware/authMiddleware');
 const role = require('../middleware/roleMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
 const {
   createProduct,
@@ -16,6 +17,7 @@ router.post(
   '/products',
   auth,
   role('ADMIN', 'SUPPLIER'),
+  upload.single('image'),
   createProduct
 );
 
@@ -27,6 +29,7 @@ router.put(
   '/products/:id',
   auth,
   role('ADMIN', 'SUPPLIER'),
+  upload.single('image'),
   updateProduct
 );
 
