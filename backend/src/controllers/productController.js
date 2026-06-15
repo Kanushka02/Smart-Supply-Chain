@@ -10,6 +10,7 @@ exports.createProduct = async (req, res) => {
       stock: Number.parseInt(req.body.stock, 10)
     });
     const supplierId = req.user.role === 'SUPPLIER' ? req.user.id : null;
+    const image = req.file ? req.file.path : null;
 
     const product = await prisma.product.create({
       data: {
@@ -17,6 +18,7 @@ exports.createProduct = async (req, res) => {
         description: parsedProduct.description,
         price: parsedProduct.price,
         stock: parsedProduct.stock,
+        image,
         supplierId
       }
     });
@@ -99,7 +101,8 @@ exports.updateProduct = async (req, res) => {
         name: parsedProduct.name,
         description: parsedProduct.description,
         price: parsedProduct.price,
-        stock: parsedProduct.stock
+        stock: parsedProduct.stock,
+        image: req.file ? req.file.path : existingProduct.image
       }
     });
 
