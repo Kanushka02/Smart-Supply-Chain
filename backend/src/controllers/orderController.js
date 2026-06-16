@@ -1,5 +1,6 @@
 const prisma = require('../config/prisma');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
+const { sendOrderEmail } = require('../services/emailService');
 
 // CREATE ORDER
 exports.createOrder = async (req, res) => {
@@ -59,6 +60,14 @@ exports.createOrder = async (req, res) => {
         }
       }
     });
+
+    await sendOrderEmail(
+      user.email,
+      user.name,
+      product.name,
+      quantity,
+      totalPrice
+    );
 
     res.status(201).json(order);
 
