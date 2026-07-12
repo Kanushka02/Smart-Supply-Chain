@@ -3,6 +3,7 @@ const router = express.Router();
 
 const auth = require('../middleware/authMiddleware');
 const role = require('../middleware/roleMiddleware');
+const cache = require('../middleware/cacheMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
 const {
@@ -21,7 +22,7 @@ router.post(
   createProduct
 );
 
-router.get('/products', auth, role('ADMIN', 'SUPPLIER'), getAllProducts);
+router.get('/products', auth, role('ADMIN', 'SUPPLIER'), cache, getAllProducts);
 
 router.get('/products/:id', auth, role('ADMIN', 'SUPPLIER'), getProductById);
 
