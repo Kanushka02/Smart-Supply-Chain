@@ -1,5 +1,6 @@
 const prisma = require('../config/prisma');
 const { productSchema } = require('../validators/productValidator');
+const { createAuditLog } = require('../services/auditService');
 
 // CREATE PRODUCT
 exports.createProduct = async (req, res) => {
@@ -22,6 +23,18 @@ exports.createProduct = async (req, res) => {
         supplierId
       }
     });
+
+    try {
+      await createAuditLog({
+        userId: req.user.id,
+        action: 'CREATE',
+        entity: 'PRODUCT',
+        entityId: product.id,
+        description: `Created product ${product.name}`
+      });
+    } catch (auditError) {
+      console.error('Failed to write product create audit log', auditError);
+    }
 
     res.status(201).json(product);
   } catch (error) {
@@ -136,6 +149,18 @@ exports.deleteProduct = async (req, res) => {
     await prisma.product.delete({
       where: { id }
     });
+
+    try {
+      await createAuditLog({
+        userId: req.user.id,
+        action: 'DELETE',
+        entity: 'PRODUCT',
+        entityId: id,
+        description: `Deleted product ID ${id}`
+      });
+    } catch (auditError) {
+      console.error('Failed to write product delete audit log', auditError);
+    }
 
     res.status(200).json({
       message: 'Product deleted successfully'
