@@ -27,6 +27,7 @@ model User {
 
   orders      Order[]
   products    Product[]  @relation("ProductOwner")
+  auditLogs   AuditLog[]
 
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -60,6 +61,18 @@ model Order {
   product      Product @relation(fields: [productId], references: [id])
 
   createdAt    DateTime @default(now())
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  action      String
+  entity      String
+  entityId    Int?
+  description String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 model Inventory {
