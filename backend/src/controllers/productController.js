@@ -1,6 +1,17 @@
 const prisma = require('../config/prisma');
+const redis = require('../config/redis');
 const { productSchema } = require('../validators/productValidator');
 const { createAuditLog } = require('../services/auditService');
+
+const PRODUCTS_CACHE_KEY = '/api/products';
+
+const invalidateProductsCache = async () => {
+  try {
+    await redis.del(PRODUCTS_CACHE_KEY);
+  } catch (error) {
+    console.error('Failed to invalidate products cache', error);
+  }
+};
 
 // CREATE PRODUCT
 exports.createProduct = async (req, res) => {
@@ -36,6 +47,8 @@ exports.createProduct = async (req, res) => {
       console.error('Failed to write product create audit log', auditError);
     }
 
+    await invalidateProductsCache();
+
     res.status(201).json(product);
   } catch (error) {
     throw error;
@@ -46,6 +59,18 @@ exports.createProduct = async (req, res) => {
 exports.getAllProducts = async (req, res) => {
   try {
     const products = await prisma.product.findMany();
+
+    try {
+      await redis.set(
+        req.originalUrl,
+        JSON.stringify(products),
+        {
+          EX: 300
+        }
+      );
+    } catch (cacheError) {
+      console.error('Failed to store products cache', cacheError);
+    }
 
     res.status(200).json(products);
   } catch (error) {
@@ -161,6 +186,8 @@ exports.deleteProduct = async (req, res) => {
     } catch (auditError) {
       console.error('Failed to write product delete audit log', auditError);
     }
+
+    await invalidateProductsCache();
 
     res.status(200).json({
       message: 'Product deleted successfully'
