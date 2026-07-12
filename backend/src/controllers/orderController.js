@@ -1,11 +1,13 @@
 const prisma = require('../config/prisma');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 const { sendOrderEmail } = require('../services/emailService');
+const { createAuditLog } = require('../services/auditService');
 
 // CREATE ORDER
 exports.createOrder = async (req, res) => {
   try {
-    const { productId, quantity } = req.body;
+    const productId = Number(req.body.productId);
+    const quantity = Number(req.body.quantity);
     const userId = req.user.id;
 
     // Check user exists
@@ -60,6 +62,18 @@ exports.createOrder = async (req, res) => {
         }
       }
     });
+
+    try {
+      await createAuditLog({
+        userId: req.user.id,
+        action: 'CREATE',
+        entity: 'ORDER',
+        entityId: order.id,
+        description: `Created order ${order.id}`
+      });
+    } catch (auditError) {
+      console.error('Failed to write order create audit log', auditError);
+    }
 
     await sendOrderEmail(
       user.email,
