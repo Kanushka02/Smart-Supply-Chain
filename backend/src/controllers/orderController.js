@@ -1,6 +1,6 @@
 const prisma = require('../config/prisma');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
-const { sendOrderEmail } = require('../services/emailService');
+const { orderQueue } = require('../config/queue');
 const { createAuditLog } = require('../services/auditService');
 
 // CREATE ORDER
@@ -75,12 +75,28 @@ exports.createOrder = async (req, res) => {
       console.error('Failed to write order create audit log', auditError);
     }
 
-    await sendOrderEmail(
-      user.email,
-      user.name,
-      product.name,
-      quantity,
-      totalPrice
+    await orderQueue.add(
+      'process-order-events',
+      {
+        orderId: order.id,
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.name,
+        productId: product.id,
+        productName: product.name,
+        quantity,
+        totalPrice
+      },
+      {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 5000
+        },
+        removeOnComplete: 100,
+        removeOnFail: 500,
+        jobId: `order-${order.id}`
+      }
     );
 
     res.status(201).json(order);
