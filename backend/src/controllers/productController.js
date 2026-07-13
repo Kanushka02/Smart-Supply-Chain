@@ -3,11 +3,43 @@ const redis = require('../config/redis');
 const { productSchema } = require('../validators/productValidator');
 const { createAuditLog } = require('../services/auditService');
 
-const PRODUCTS_CACHE_KEY = '/api/products';
+const PRODUCTS_CACHE_KEY_PREFIX = '/api/products';
+
+const PRODUCT_LIST_SELECT = {
+  id: true,
+  name: true,
+  price: true,
+  stock: true,
+  image: true,
+  createdAt: true
+};
+
+const toPositiveInt = (value, defaultValue) => {
+  const parsed = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return defaultValue;
+  }
+
+  return parsed;
+};
+
+const toNumberOrNull = (value) => {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
 
 const invalidateProductsCache = async () => {
   try {
-    await redis.del(PRODUCTS_CACHE_KEY);
+    const keys = await redis.keys(`${PRODUCTS_CACHE_KEY_PREFIX}*`);
+
+    if (keys.length > 0) {
+      await redis.del(keys);
+    }
   } catch (error) {
     console.error('Failed to invalidate products cache', error);
   }
@@ -58,12 +90,78 @@ exports.createProduct = async (req, res) => {
 // GET ALL PRODUCTS
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await prisma.product.findMany();
+    const page = toPositiveInt(req.query.page, 1);
+    const requestedLimit = toPositiveInt(req.query.limit, 10);
+    const limit = Math.min(requestedLimit, 100);
+    const skip = (page - 1) * limit;
+
+    const search = (req.query.search || '').trim();
+    const minPrice = toNumberOrNull(req.query.minPrice);
+    const maxPrice = toNumberOrNull(req.query.maxPrice);
+    const sort = req.query.sort;
+
+    const where = {};
+
+    if (search) {
+      where.name = {
+        contains: search,
+        mode: 'insensitive'
+      };
+    }
+
+    if (minPrice !== null || maxPrice !== null) {
+      where.price = {};
+
+      if (minPrice !== null) {
+        where.price.gte = minPrice;
+      }
+
+      if (maxPrice !== null) {
+        where.price.lte = maxPrice;
+      }
+    }
+
+    let orderBy = {
+      createdAt: 'desc'
+    };
+
+    if (sort === 'price') {
+      orderBy = {
+        price: 'asc'
+      };
+    } else if (sort === '-price') {
+      orderBy = {
+        price: 'desc'
+      };
+    } else if (sort === '-createdAt') {
+      orderBy = {
+        createdAt: 'asc'
+      };
+    }
+
+    const [total, products] = await prisma.$transaction([
+      prisma.product.count({ where }),
+      prisma.product.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy,
+        select: PRODUCT_LIST_SELECT
+      })
+    ]);
+
+    const responsePayload = {
+      success: true,
+      total,
+      page,
+      limit,
+      data: products
+    };
 
     try {
       await redis.set(
         req.originalUrl,
-        JSON.stringify(products),
+        JSON.stringify(responsePayload),
         {
           EX: 300
         }
@@ -72,7 +170,7 @@ exports.getAllProducts = async (req, res) => {
       console.error('Failed to store products cache', cacheError);
     }
 
-    res.status(200).json(products);
+    res.status(200).json(responsePayload);
   } catch (error) {
     res.status(500).json({
       message: 'Failed to fetch products'
