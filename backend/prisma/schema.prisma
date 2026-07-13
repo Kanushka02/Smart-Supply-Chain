@@ -47,6 +47,10 @@ model Product {
   orders      Order[]
 
   createdAt   DateTime @default(now())
+
+  @@index([name])
+  @@index([price])
+  @@index([createdAt])
 }
 
 model Order {
