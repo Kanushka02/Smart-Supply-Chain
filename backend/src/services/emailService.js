@@ -24,5 +24,6 @@ exports.sendOrderEmail = async (
     console.log('Order confirmation email sent');
   } catch (error) {
     console.error('Failed to send order confirmation email:', error.message);
+    throw error;
   }
 };
