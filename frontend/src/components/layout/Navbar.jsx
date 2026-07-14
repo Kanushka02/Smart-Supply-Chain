@@ -7,6 +7,7 @@ import {
   useAuth
 }
 from '../../context/useAuth';
+import NotificationDropdown from '../common/NotificationDropdown';
 
 function Navbar() {
 
@@ -64,6 +65,8 @@ function Navbar() {
         gap-4
         "
       >
+
+        <NotificationDropdown />
 
         <span
           className="

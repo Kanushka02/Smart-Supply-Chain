@@ -17,6 +17,9 @@ from './pages/Login';
 import Register
 from './pages/Register';
 
+import Notifications
+from './pages/Notifications';
+
 // ADMIN
 import AdminDashboard
 from './pages/admin/Dashboard';
@@ -185,6 +188,18 @@ function App() {
               role="SUPPLIER"
             >
               <SupplierOrders />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* NOTIFICATIONS */}
+
+        <Route
+          path="/notifications"
+
+          element={
+            <ProtectedRoute>
+              <Notifications />
             </ProtectedRoute>
           }
         />
