@@ -11,7 +11,6 @@ exports.createOrder = async (req, res) => {
     const quantity = Number(req.body.quantity);
     const userId = req.user.id;
 
-    // Check user exists
     const user = await prisma.user.findUnique({
       where: { id: userId }
     });
@@ -22,7 +21,6 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // Check product exists
     const product = await prisma.product.findUnique({
       where: { id: productId }
     });
@@ -33,18 +31,14 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // Check stock
     if (product.stock < quantity) {
       return res.status(400).json({
         message: 'Insufficient stock'
       });
     }
 
-    // Auto calculate total
-    const totalPrice =
-      product.price * quantity;
+    const totalPrice = product.price * quantity;
 
-    // Create order
     const order = await prisma.order.create({
       data: {
         userId,
@@ -54,8 +48,7 @@ exports.createOrder = async (req, res) => {
       }
     });
 
-    // Reduce stock automatically
-    await prisma.product.update({
+    const updatedProduct = await prisma.product.update({
       where: { id: productId },
       data: {
         stock: {
@@ -63,6 +56,41 @@ exports.createOrder = async (req, res) => {
         }
       }
     });
+
+    const orderWithDetails = await prisma.order.findUnique({
+      where: { id: order.id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true
+          }
+        },
+        product: true
+      }
+    });
+
+    const io = req.app.get('io');
+
+    if (io) {
+      io.to('role-admin').emit('order:created', orderWithDetails);
+      io.to(`user-${userId}`).emit('order:created', orderWithDetails);
+
+      io.emit('inventory:updated', {
+        product: updatedProduct,
+        productId: updatedProduct.id,
+        stock: updatedProduct.stock
+      });
+
+      io.to('role-admin').emit('dashboard:updated', {
+        reason: 'order_created',
+        orderId: order.id,
+        productId: updatedProduct.id,
+        totalPrice
+      });
+    }
 
     try {
       await createAuditLog({
@@ -100,86 +128,54 @@ exports.createOrder = async (req, res) => {
       }
     );
 
-    // Create notifications
     try {
-      // Notify supplier (order creator)
-      await createNotification(
+      const supplierNotification = await createNotification(
         userId,
         'Order Created Successfully',
         `Your order for ${product.name} (Qty: ${quantity}) has been created.`,
         'SUCCESS'
       );
 
-      // Get all admin users
+      if (io) {
+        io.to(`user-${userId}`).emit('notification', supplierNotification);
+      }
+
       const admins = await prisma.user.findMany({
         where: { role: 'ADMIN' }
       });
 
-      // Notify all admins about new order
       for (const admin of admins) {
-        await createNotification(
+        const adminNotification = await createNotification(
           admin.id,
           'New Order Received',
           `${user.name} created a new order for ${product.name} (Qty: ${quantity}).`,
           'INFO'
         );
-      }
 
-      // Emit notifications to connected clients
-      const io = req.app.get('io');
-      if (io) {
-        // Notify supplier
-        io.to(`user-${userId}`).emit('notification', {
-          id: order.id,
-          title: 'Order Created Successfully',
-          message: `Your order for ${product.name} (Qty: ${quantity}) has been created.`,
-          type: 'SUCCESS',
-          createdAt: new Date()
-        });
-
-        // Notify admins
-        for (const admin of admins) {
-          io.to(`user-${admin.id}`).emit('notification', {
-            id: order.id,
-            title: 'New Order Received',
-            message: `${user.name} created a new order for ${product.name} (Qty: ${quantity}).`,
-            type: 'INFO',
-            createdAt: new Date()
-          });
+        if (io) {
+          io.to(`user-${admin.id}`).emit('notification', adminNotification);
         }
       }
     } catch (notificationError) {
       console.error('Failed to create/emit notifications:', notificationError);
-      // Don't fail the order if notification fails
     }
 
-    // Check for low stock and emit warning
     try {
-      const updatedProduct = await prisma.product.findUnique({
-        where: { id: productId }
-      });
+      if (updatedProduct.stock < 10) {
+        const admins = await prisma.user.findMany({
+          where: { role: 'ADMIN' }
+        });
 
-      if (updatedProduct && updatedProduct.stock < 10) {
-        const io = req.app.get('io');
-        if (io) {
-          const admins = await prisma.user.findMany({
-            where: { role: 'ADMIN' }
-          });
+        for (const admin of admins) {
+          const lowStockNotification = await createNotification(
+            admin.id,
+            'Low Stock Warning',
+            `${product.name} has only ${updatedProduct.stock} items remaining.`,
+            'WARNING'
+          );
 
-          for (const admin of admins) {
-            await createNotification(
-              admin.id,
-              'Low Stock Warning',
-              `${product.name} has only ${updatedProduct.stock} items remaining.`,
-              'WARNING'
-            );
-
-            io.to(`user-${admin.id}`).emit('notification', {
-              title: 'Low Stock Warning',
-              message: `${product.name} has only ${updatedProduct.stock} items remaining.`,
-              type: 'WARNING',
-              createdAt: new Date()
-            });
+          if (io) {
+            io.to(`user-${admin.id}`).emit('notification', lowStockNotification);
           }
         }
       }
@@ -187,8 +183,7 @@ exports.createOrder = async (req, res) => {
       console.error('Failed to handle low stock notification:', lowStockError);
     }
 
-    res.status(201).json(order);
-
+    res.status(201).json(orderWithDetails || order);
   } catch (error) {
     console.error(error);
 
