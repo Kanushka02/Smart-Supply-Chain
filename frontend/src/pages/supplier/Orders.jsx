@@ -30,10 +30,17 @@ import {
 }
 from '../../context/useAuth';
 
+import {
+  useSocket
+}
+from '../../context/SocketContext';
+
 function Orders() {
 
   const { user } =
     useAuth();
+  const { socket } =
+    useSocket();
 
   const [orders,
     setOrders] =
@@ -49,6 +56,9 @@ function Orders() {
 
   const fetchOrders =
   async () => {
+    if (!user?.id) {
+      return;
+    }
 
     try {
       const res =
@@ -77,14 +87,12 @@ function Orders() {
 
   useEffect(() => {
     async function loadOrders() {
-
       try {
         const res =
-          await getSupplierOrders(
-            user.id
-          );
+        await getSupplierOrders(
+          user.id
+        );
 
-        // Handle wrapped response format from successResponse
         const ordersData = Array.isArray(res.data)
           ? res.data
           : Array.isArray(res.data?.data)
@@ -105,6 +113,47 @@ function Orders() {
 
     loadOrders();
   }, [user.id]);
+
+  useEffect(() => {
+    if (!socket) {
+      return;
+    }
+
+    const handleOrderCreated = () => {
+      async function loadOrders() {
+        try {
+          const res =
+          await getSupplierOrders(
+            user.id
+          );
+
+          const ordersData = Array.isArray(res.data)
+            ? res.data
+            : Array.isArray(res.data?.data)
+              ? res.data.data
+              : [];
+
+          setOrders(ordersData);
+        } catch (error) {
+          console.error('Failed to fetch orders:', error);
+          toast.error(
+            'Failed to load orders'
+          );
+          setOrders([]);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      loadOrders();
+    };
+
+    socket.on('order:created', handleOrderCreated);
+
+    return () => {
+      socket.off('order:created', handleOrderCreated);
+    };
+  }, [socket, user.id]);
 
   const handleSave =
   async (data) => {
