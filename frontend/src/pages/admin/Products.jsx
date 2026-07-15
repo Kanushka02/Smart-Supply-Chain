@@ -29,7 +29,14 @@ import {
 }
 from '../../services/productService';
 
+import {
+  useSocket
+}
+from '../../context/SocketContext';
+
 function Products() {
+  const { socket } =
+    useSocket();
 
   const [products, setProducts] =
     useState([]);
@@ -81,34 +88,27 @@ function Products() {
 
   useEffect(() => {
     async function loadProducts() {
-      try {
-
-        const res =
-          await getProducts();
-
-        const payload = res.data;
-
-        setProducts(
-          Array.isArray(payload)
-            ? payload
-            : Array.isArray(payload?.data)
-              ? payload.data
-              : []
-        );
-
-      } catch (error) {
-
-        console.error(error);
-        toast.error(
-          'Failed to load products'
-        );
-      } finally {
-        setLoading(false);
-      }
+      await fetchProducts();
     }
 
     loadProducts();
   }, []);
+
+  useEffect(() => {
+    if (!socket) {
+      return;
+    }
+
+    const handleInventoryUpdated = () => {
+      fetchProducts();
+    };
+
+    socket.on('inventory:updated', handleInventoryUpdated);
+
+    return () => {
+      socket.off('inventory:updated', handleInventoryUpdated);
+    };
+  }, [socket]);
 
   const handleSave =
     async (productData) => {
