@@ -23,9 +23,33 @@ io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
   // Join user-specific room
-  socket.on('join', (userId) => {
-    socket.join(`user-${userId}`);
-    console.log(`User ${userId} joined room user-${userId}`);
+  socket.on('join', (payload) => {
+    const userId = typeof payload === 'object' ? payload.userId : payload;
+    const role = typeof payload === 'object' ? payload.role : null;
+
+    if (userId) {
+      socket.join(`user-${userId}`);
+      console.log(`User ${userId} joined room user-${userId}`);
+    }
+
+    if (role) {
+      const roleRoom = `role-${String(role).toLowerCase()}`;
+      socket.join(roleRoom);
+      console.log(`User ${userId} joined room ${roleRoom}`);
+    }
+  });
+
+  socket.on('leave', (payload) => {
+    const userId = typeof payload === 'object' ? payload.userId : payload;
+    const role = typeof payload === 'object' ? payload.role : null;
+
+    if (userId) {
+      socket.leave(`user-${userId}`);
+    }
+
+    if (role) {
+      socket.leave(`role-${String(role).toLowerCase()}`);
+    }
   });
 
   // Handle disconnect
