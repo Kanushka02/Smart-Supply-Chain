@@ -1,9 +1,11 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
+import { useAuth } from './useAuth';
 
 const SocketContext = createContext();
 
 export const SocketProvider = ({ children }) => {
+  const { user } = useAuth();
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
 
@@ -18,14 +20,6 @@ export const SocketProvider = ({ children }) => {
     socketInstance.on('connect', () => {
       console.log('Socket connected:', socketInstance.id);
       setIsConnected(true);
-
-      // Get user from localStorage
-      const user = localStorage.getItem('user');
-      if (user) {
-        const { id } = JSON.parse(user);
-        socketInstance.emit('join', id);
-        console.log('Joined user room:', id);
-      }
     });
 
     socketInstance.on('disconnect', () => {
@@ -43,6 +37,25 @@ export const SocketProvider = ({ children }) => {
       socketInstance.close();
     };
   }, []);
+
+  useEffect(() => {
+    if (!socket || !isConnected || !user?.id) {
+      return;
+    }
+
+    socket.emit('join', {
+      userId: user.id,
+      role: user.role,
+    });
+    console.log('Joined socket rooms:', user.id, user.role);
+
+    return () => {
+      socket.emit('leave', {
+        userId: user.id,
+        role: user.role,
+      });
+    };
+  }, [socket, isConnected, user?.id, user?.role]);
 
   return (
     <SocketContext.Provider value={{ socket, isConnected }}>
