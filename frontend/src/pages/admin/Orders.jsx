@@ -25,7 +25,14 @@ import {
 }
 from '../../services/orderService';
 
+import {
+  useSocket
+}
+from '../../context/SocketContext';
+
 function Orders() {
+  const { socket } =
+    useSocket();
 
   const [orders,
     setOrders] =
@@ -66,31 +73,27 @@ function Orders() {
 
   useEffect(() => {
     async function loadOrders() {
-
-      try {
-        const res =
-        await getOrders();
-
-        setOrders(
-          Array.isArray(res.data)
-            ? res.data
-            : Array.isArray(res.data?.data)
-              ? res.data.data
-              : []
-        );
-      } catch (error) {
-        console.error('Failed to fetch orders:', error);
-        toast.error(
-          'Failed to load orders'
-        );
-        setOrders([]);
-      } finally {
-        setLoading(false);
-      }
+      await fetchOrders();
     }
 
     loadOrders();
   }, []);
+
+  useEffect(() => {
+    if (!socket) {
+      return;
+    }
+
+    const handleOrderCreated = () => {
+      fetchOrders();
+    };
+
+    socket.on('order:created', handleOrderCreated);
+
+    return () => {
+      socket.off('order:created', handleOrderCreated);
+    };
+  }, [socket]);
 
   const handleDelete =
   (id) => {
