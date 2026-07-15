@@ -33,7 +33,14 @@ from '../../components/dashboard/LowStock';
 import API
 from '../../services/api';
 
+import {
+  useSocket
+}
+from '../../context/SocketContext';
+
 function Dashboard() {
+  const { socket } =
+    useSocket();
 
   const [products,
     setProducts] =
@@ -51,48 +58,69 @@ function Dashboard() {
     setLoading] =
     useState(true);
 
+  const fetchData =
+  async () => {
+    setLoading(true);
+
+    try {
+      const [
+        productsRes,
+        usersRes,
+        ordersRes
+      ] = await Promise.all([
+        API.get('/products'),
+        API.get('/users'),
+        API.get('/orders')
+      ]);
+
+      setProducts(
+        productsRes?.data?.data || productsRes?.data || []
+      );
+
+      setUsers(
+        usersRes?.data?.data || usersRes?.data || []
+      );
+
+      setOrders(
+        ordersRes?.data?.data || ordersRes?.data || []
+      );
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+      setProducts([]);
+      setUsers([]);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-
-    async function
-    fetchData() {
-
-      setLoading(true);
-
-      try {
-        const [
-          productsRes,
-          usersRes,
-          ordersRes
-        ] = await Promise.all([
-          API.get('/products'),
-          API.get('/users'),
-          API.get('/orders')
-        ]);
-
-        setProducts(
-          productsRes?.data?.data || []
-        );
-
-        setUsers(
-          usersRes?.data?.data || []
-        );
-
-        setOrders(
-          ordersRes?.data?.data || []
-        );
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
-        setProducts([]);
-        setUsers([]);
-        setOrders([]);
-      } finally {
-        setLoading(false);
-      }
+    async function loadDashboardData() {
+      await fetchData();
     }
 
-    fetchData();
-
+    loadDashboardData();
   }, []);
+
+  useEffect(() => {
+    if (!socket) {
+      return;
+    }
+
+    const handleDashboardRefresh = () => {
+      fetchData();
+    };
+
+    socket.on('order:created', handleDashboardRefresh);
+    socket.on('inventory:updated', handleDashboardRefresh);
+    socket.on('dashboard:updated', handleDashboardRefresh);
+
+    return () => {
+      socket.off('order:created', handleDashboardRefresh);
+      socket.off('inventory:updated', handleDashboardRefresh);
+      socket.off('dashboard:updated', handleDashboardRefresh);
+    };
+  }, [socket]);
 
   const revenue =
   (orders || []).reduce(
