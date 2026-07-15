@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaBell, FaTrash, FaCheckCircle, FaInfoCircle, FaExclamationTriangle, FaTimesCircle } from 'react-icons/fa';
 import toast from 'react-hot-toast';
-import notificationService from '../../services/notificationService';
-import LoadingState from '../common/LoadingState';
+import notificationService from '../services/notificationService';
+import LoadingState from '../components/common/LoadingState';
 
 function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
