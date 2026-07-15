@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
+const swaggerUi = require('swagger-ui-express');
 
 const app = express();
 const authRoutes =require('./routes/authRoutes');
@@ -13,11 +14,14 @@ const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes =require('./routes/orderRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const swaggerSpec = require('./config/swagger');
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false
+}));
 app.use(morgan('dev'));
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -25,6 +29,11 @@ app.use(rateLimit({
   message: 'Too many requests'
 }));
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
 
 app.use('/api', dbTestRoutes);
 
