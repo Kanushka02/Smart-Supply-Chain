@@ -1,0 +1,25 @@
+Month,Product,Orders,Stock,Price
+Jan,Cinnamon Powder,120,300,500
+Feb,Cinnamon Powder,150,280,500
+Mar,Cinnamon Powder,170,250,520
+Apr,Cinnamon Powder,210,220,520
+May,Cinnamon Powder,230,200,530
+Jun,Cinnamon Powder,250,180,540
+Jul,Cinnamon Powder,270,160,540
+Aug,Cinnamon Powder,300,140,550
+Sep,Cinnamon Powder,320,130,550
+Oct,Cinnamon Powder,340,120,560
+Nov,Cinnamon Powder,360,110,570
+Dec,Cinnamon Powder,400,100,580
+Jan,Black Pepper,80,250,700
+Feb,Black Pepper,95,240,700
+Mar,Black Pepper,110,230,710
+Apr,Black Pepper,130,220,720
+May,Black Pepper,150,210,720
+Jun,Black Pepper,170,200,730
+Jul,Black Pepper,190,180,740
+Aug,Black Pepper,210,170,740
+Sep,Black Pepper,230,160,750
+Oct,Black Pepper,250,150,760
+Nov,Black Pepper,270,140,770
+Dec,Black Pepper,300,130,780
