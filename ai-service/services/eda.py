@@ -19,6 +19,9 @@ print(df.isnull().sum())
 print("\nDuplicate rows:")
 print(df.duplicated().sum())
 
+print("\nCorrelation Matrix:")
+print(df.corr(numeric_only=True))
+
 # -------------------------
 # Sales Trend Visualization
 # -------------------------
