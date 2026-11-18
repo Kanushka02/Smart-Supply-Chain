@@ -1,0 +1,18 @@
+{
+  "model_type": "LinearRegression",
+  "features": [
+    "Price",
+    "Stock",
+    "Orders",
+    "Lag1Orders",
+    "RollingMean3",
+    "Month"
+  ],
+  "target": "NextMonthOrders",
+  "mae_units": 14.23,
+  "rmse_units": 19.78,
+  "r2_score": 0.9259,
+  "mape_percent": 7.56,
+  "train_samples": 140,
+  "test_samples": 35
+}

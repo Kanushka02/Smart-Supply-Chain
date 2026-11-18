@@ -1,0 +1,19 @@
+{
+  "feature_columns": [
+    "Price",
+    "Stock",
+    "Orders",
+    "Lag1Orders",
+    "RollingMean3",
+    "Month"
+  ],
+  "target_column": "NextMonthOrders",
+  "products": [
+    "Black Pepper",
+    "Cardamom",
+    "Cinnamon Powder",
+    "Cloves",
+    "Turmeric"
+  ],
+  "total_records": 175
+}

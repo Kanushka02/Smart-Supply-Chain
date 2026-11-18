@@ -1,41 +1,54 @@
+import os
 import pandas as pd
-import matplotlib.pyplot as plt
 
-# Load dataset
-df = pd.read_csv("data/supply_chain.csv")
+def run_eda():
+    data_path = os.path.join("data", "supply_chain.csv")
+    if not os.path.exists(data_path):
+        print(f"Dataset not found at {data_path}. Run generate_dataset.py first.")
+        return
 
-print("First 5 rows:")
-print(df.head())
+    df = pd.read_csv(data_path)
 
-print("\nDataset info:")
-print(df.info())
+    print("=" * 60)
+    print("EXPLORATORY DATA ANALYSIS (EDA) - SUPPLY CHAIN DATASET")
+    print("=" * 60)
 
-print("\nStatistics:")
-print(df.describe())
+    print("\n1. Dataset Shape & Overview:")
+    print(f"Total Rows: {len(df)}, Total Columns: {len(df.columns)}")
+    print(df.head(5))
 
-print("\nMissing values:")
-print(df.isnull().sum())
+    print("\n2. Column Data Types & Non-Null Counts:")
+    print(df.info())
 
-print("\nDuplicate rows:")
-print(df.duplicated().sum())
+    print("\n3. Missing Values Check:")
+    missing = df.isnull().sum()
+    print(missing[missing > 0] if missing.sum() > 0 else "No missing values found! (Clean dataset)")
 
-print("\nCorrelation Matrix:")
-print(df.corr(numeric_only=True))
+    print("\n4. Duplicates Check:")
+    print(f"Duplicate rows count: {df.duplicated().sum()}")
 
-# -------------------------
-# Sales Trend Visualization
-# -------------------------
+    print("\n5. Summary Statistics by Product:")
+    summary = df.groupby("Product").agg(
+        record_count=("Orders", "count"),
+        avg_price=("Price", "mean"),
+        min_orders=("Orders", "min"),
+        avg_orders=("Orders", "mean"),
+        max_orders=("Orders", "max"),
+        avg_stock=("Stock", "mean")
+    ).round(2)
+    print(summary)
 
-plt.figure(figsize=(10, 5))
+    print("\n6. Overall Numerical Summary:")
+    print(df[["Price", "Stock", "Orders"]].describe().round(2))
 
-plt.plot(df["Month"], df["Orders"], marker="o")
+    print("\n7. Correlation Matrix (Numeric Features):")
+    numeric_cols = ["Year", "Month", "Price", "Stock", "Orders"]
+    corr = df[numeric_cols].corr().round(3)
+    print(corr)
 
-plt.title("Monthly Orders Trend")
+    print("\n" + "=" * 60)
+    print("EDA Complete! Dataset is ready for feature engineering.")
+    print("=" * 60)
 
-plt.xlabel("Month")
-
-plt.ylabel("Orders")
-
-plt.grid(True)
-
-plt.show()
+if __name__ == "__main__":
+    run_eda()
