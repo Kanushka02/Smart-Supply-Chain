@@ -1,0 +1,71 @@
+# ==============================================================================
+# Smart Supply Chain Management System - Root .gitignore
+# ==============================================================================
+
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Python Virtual Environments & Packages
+venv/
+*/venv/
+.venv/
+*/.venv/
+env/
+*/env/
+ENV/
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+*.egg
+
+# Python Caches & Bytecode
+__pycache__/
+*/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Environment Variables & Secrets (Keep .env.example tracked)
+.env
+.env*.local
+*.env
+!.env.example
+!*.env.example
+
+# Build Outputs & Logs
+dist/
+*/dist/
+dist-ssr/
+*/dist-ssr/
+coverage/
+*/coverage/
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Prisma Generated Clients
+/src/generated/prisma
+backend/src/generated/prisma
+
+# IDEs & Operating System Artifacts
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+Desktop.ini
