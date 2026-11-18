@@ -1,11 +1,9 @@
-import axios
-from 'axios';
+import axios from 'axios';
 
-const API =
-axios.create({
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-  baseURL:
-  'http://localhost:5000/api'
+const API = axios.create({
+  baseURL: BASE_URL
 });
 
 const AUTH_PATHS = new Set([
@@ -79,9 +77,8 @@ API.interceptors.response
           throw new Error('No refresh token');
         }
 
-        const res =
-        await axios.post(
-          'http://localhost:5000/api/auth/refresh',
+        const res = await axios.post(
+          `${BASE_URL}/auth/refresh`,
           {
             refreshToken
           }
