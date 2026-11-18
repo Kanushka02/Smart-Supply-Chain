@@ -13,7 +13,6 @@ const {
   deleteOrder
 } = require('../controllers/orderController');
 
-router.post('/orders', auth, role('SUPPLIER'), createOrder);
 router.post('/orders', auth, role('ADMIN', 'SUPPLIER'), createOrder);
 
 router.get('/orders', auth, role('ADMIN', 'SUPPLIER'), getAllOrders);
