@@ -37,24 +37,37 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    const totalPrice = product.price * quantity;
+    // Atomic transaction: create order and decrement stock together
+    const { order, updatedProduct } = await prisma.$transaction(async (tx) => {
+      const freshProduct = await tx.product.findUnique({
+        where: { id: productId }
+      });
 
-    const order = await prisma.order.create({
-      data: {
-        userId,
-        productId,
-        quantity,
-        totalPrice
+      if (!freshProduct || freshProduct.stock < quantity) {
+        throw new Error('INSUFFICIENT_STOCK');
       }
-    });
 
-    const updatedProduct = await prisma.product.update({
-      where: { id: productId },
-      data: {
-        stock: {
-          decrement: quantity
+      const totalPrice = freshProduct.price * quantity;
+
+      const newOrder = await tx.order.create({
+        data: {
+          userId,
+          productId,
+          quantity,
+          totalPrice
         }
-      }
+      });
+
+      const updated = await tx.product.update({
+        where: { id: productId },
+        data: {
+          stock: {
+            decrement: quantity
+          }
+        }
+      });
+
+      return { order: newOrder, updatedProduct: updated };
     });
 
     const orderWithDetails = await prisma.order.findUnique({
@@ -186,6 +199,12 @@ exports.createOrder = async (req, res) => {
     res.status(201).json(orderWithDetails || order);
   } catch (error) {
     console.error(error);
+
+    if (error.message === 'INSUFFICIENT_STOCK') {
+      return res.status(400).json({
+        message: 'Insufficient stock'
+      });
+    }
 
     res.status(500).json({
       message: 'Failed to create order'
