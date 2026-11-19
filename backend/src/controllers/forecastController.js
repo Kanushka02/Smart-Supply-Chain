@@ -1,77 +1,10 @@
 const prisma = require('../config/prisma');
 const aiService = require('../services/aiService');
-
-/**
- * Helper to compute recent 30-day order quantity and rolling statistics for a product.
- */
-const getProductOrderStats = (orders) => {
-  if (!orders || orders.length === 0) {
-    return {
-      recentOrders: 0,
-      lag1Orders: 0,
-      rollingMean3: 0
-    };
-  }
-
-  const now = new Date();
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-
-  // Orders in the last 30 days
-  const recentOrders = orders
-    .filter((o) => new Date(o.createdAt) >= thirtyDaysAgo)
-    .reduce((sum, o) => sum + (o.quantity || 0), 0);
-
-  // Orders in the prior 30-day window (days 31-60)
-  const priorOrders = orders
-    .filter((o) => {
-      const d = new Date(o.createdAt);
-      return d >= sixtyDaysAgo && d < thirtyDaysAgo;
-    })
-    .reduce((sum, o) => sum + (o.quantity || 0), 0);
-
-  const rollingMean = (recentOrders + priorOrders) / 2;
-
-  return {
-    recentOrders,
-    lag1Orders: priorOrders > 0 ? priorOrders : recentOrders,
-    rollingMean3: Number(rollingMean.toFixed(2))
-  };
-};
-
-/**
- * Determine inventory risk level based on stock vs predicted demand.
- */
-const evaluateStockRisk = (currentStock, predictedDemand) => {
-  let stockStatus = 'HEALTHY';
-  let projectedShortage = 0;
-  let recommendedRestock = 0;
-  let recommendation = 'Inventory level is adequate for anticipated demand.';
-
-  if (currentStock < predictedDemand) {
-    projectedShortage = predictedDemand - currentStock;
-    // Buffer recommendation (+20% safety stock)
-    recommendedRestock = projectedShortage + Math.round(predictedDemand * 0.2);
-
-    if (currentStock < predictedDemand * 0.5) {
-      stockStatus = 'CRITICAL_SHORTAGE';
-      recommendation = `CRITICAL RISK: Projected demand (${predictedDemand} units) exceeds available stock by ${projectedShortage} units. Immediate procurement of ${recommendedRestock} units strongly recommended.`;
-    } else {
-      stockStatus = 'POTENTIAL_SHORTAGE';
-      recommendation = `WARNING: Projected demand (${predictedDemand} units) exceeds stock by ${projectedShortage} units. Recommend ordering ${recommendedRestock} units soon.`;
-    }
-  } else if (currentStock > predictedDemand * 2.5 && currentStock > 100) {
-    stockStatus = 'OVERSTOCK_RISK';
-    recommendation = `NOTICE: Current inventory (${currentStock} units) is more than 2.5x projected demand. Monitor holding costs.`;
-  }
-
-  return {
-    stockStatus,
-    projectedShortage,
-    recommendedRestock,
-    recommendation
-  };
-};
+const {
+  getProductOrderStats,
+  evaluateStockRisk,
+  scanCatalogForRiskAlerts
+} = require('../services/alertService');
 
 /**
  * GET /api/forecast/status
@@ -299,3 +232,37 @@ exports.getAllForecasts = async (req, res) => {
     });
   }
 };
+
+/**
+ * POST /api/forecast/check-alerts
+ * Proactively trigger AI inventory risk scan across catalog and dispatch alerts.
+ */
+exports.checkCatalogAlerts = async (req, res) => {
+  try {
+    const io = req.app.get('io');
+    const result = await scanCatalogForRiskAlerts(
+      {
+        supplierId: req.user.id,
+        role: req.user.role
+      },
+      io
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: `AI catalog risk scan completed. ${result.alertsTriggered} shortage alert(s) processed.`,
+      data: result
+    });
+  } catch (error) {
+    console.error('Scan catalog alerts error:', error.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to run AI catalog shortage scan',
+      error: error.message
+    });
+  }
+};
+
+// Export helpers for testing and external consumers
+exports.getProductOrderStats = getProductOrderStats;
+exports.evaluateStockRisk = evaluateStockRisk;
