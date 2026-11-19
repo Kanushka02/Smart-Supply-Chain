@@ -588,6 +588,17 @@ const swaggerDefinition = {
         }
       }
     },
+    '/forecast/check-alerts': {
+      post: {
+        tags: ['Forecast'],
+        summary: 'Proactively scan catalog for shortage risks and dispatch automated alerts',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Catalog shortage scan executed and alerts dispatched' },
+          401: { description: 'Unauthorized' }
+        }
+      }
+    },
     '/forecast/{productId}': {
       get: {
         tags: ['Forecast'],
