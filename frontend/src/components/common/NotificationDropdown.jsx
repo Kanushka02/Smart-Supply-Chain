@@ -29,8 +29,14 @@ function NotificationDropdown() {
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((prev) => prev + 1);
       
-      // Show toast
-      toast.success(notification.message || notification.title);
+      // Proactive toast alert based on severity
+      if (notification.type === 'CRITICAL_SHORTAGE' || notification.type === 'ERROR') {
+        toast.error(notification.message || notification.title, { duration: 6000 });
+      } else if (notification.type === 'POTENTIAL_SHORTAGE' || notification.type === 'WARNING') {
+        toast(notification.message || notification.title, { icon: '⚠️', duration: 5000 });
+      } else {
+        toast.success(notification.message || notification.title);
+      }
     });
 
     return () => {
@@ -113,10 +119,12 @@ function NotificationDropdown() {
     switch (type) {
       case 'SUCCESS':
         return 'bg-green-50 border-l-4 border-green-500';
-      case 'WARNING':
-        return 'bg-yellow-50 border-l-4 border-yellow-500';
+      case 'CRITICAL_SHORTAGE':
       case 'ERROR':
         return 'bg-red-50 border-l-4 border-red-500';
+      case 'POTENTIAL_SHORTAGE':
+      case 'WARNING':
+        return 'bg-amber-50 border-l-4 border-amber-500';
       default:
         return 'bg-blue-50 border-l-4 border-blue-500';
     }
@@ -179,9 +187,18 @@ function NotificationDropdown() {
                 >
                   <div className="flex justify-between items-start gap-2">
                     <div className="flex-1">
-                      <h4 className="font-semibold text-sm text-gray-800">
-                        {notification.title}
-                      </h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-sm text-gray-800">
+                          {notification.title}
+                        </h4>
+                        {(notification.type === 'CRITICAL_SHORTAGE' || notification.type === 'POTENTIAL_SHORTAGE') && (
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                            notification.type === 'CRITICAL_SHORTAGE' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            AI Alert
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-600 mt-1">
                         {notification.message}
                       </p>
