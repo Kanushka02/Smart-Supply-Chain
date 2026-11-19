@@ -17,3 +17,9 @@ export const getBatchForecast = () =>
  */
 export const getProductForecast = (productId) =>
   API.get(`/forecast/${productId}`);
+
+/**
+ * Proactively trigger AI inventory risk scan across catalog and dispatch shortage alerts.
+ */
+export const triggerRiskAlertScan = () =>
+  API.post('/forecast/check-alerts');
