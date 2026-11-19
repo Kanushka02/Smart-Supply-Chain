@@ -19,7 +19,8 @@ const swaggerDefinition = {
     { name: 'Products', description: 'Product and inventory management' },
     { name: 'Orders', description: 'Supplier order workflows' },
     { name: 'Users', description: 'Admin user management' },
-    { name: 'Notifications', description: 'Real-time notification records' }
+    { name: 'Notifications', description: 'Real-time notification records' },
+    { name: 'Forecast', description: 'AI demand forecasting and stock risk optimization' }
   ],
   components: {
     securitySchemes: {
@@ -562,6 +563,50 @@ const swaggerDefinition = {
           200: { description: 'Notifications deleted' },
           401: { description: 'Unauthorized' },
           500: { description: 'Server error' }
+        }
+      }
+    },
+    '/forecast/status': {
+      get: {
+        tags: ['Forecast'],
+        summary: 'Check AI forecasting microservice health',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'AI service status returned' },
+          401: { description: 'Unauthorized' }
+        }
+      }
+    },
+    '/forecast': {
+      get: {
+        tags: ['Forecast'],
+        summary: 'Batch demand forecasts and risk analysis for accessible products',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Batch forecasts and summary returned' },
+          401: { description: 'Unauthorized' }
+        }
+      }
+    },
+    '/forecast/{productId}': {
+      get: {
+        tags: ['Forecast'],
+        summary: 'Forecast next-month demand and evaluate stock risk for a product',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'productId',
+            in: 'path',
+            required: true,
+            schema: { type: 'integer' }
+          }
+        ],
+        responses: {
+          200: { description: 'Product forecast returned' },
+          401: { description: 'Unauthorized' },
+          403: { description: 'Forbidden' },
+          404: { description: 'Product not found' },
+          503: { description: 'AI service offline' }
         }
       }
     }

@@ -6,14 +6,15 @@ const morgan = require('morgan');
 const swaggerUi = require('swagger-ui-express');
 
 const app = express();
-const authRoutes =require('./routes/authRoutes');
-const errorHandler =require('./middleware/errorHandler');
+const authRoutes = require('./routes/authRoutes');
+const errorHandler = require('./middleware/errorHandler');
 const testRoutes = require('./routes/testRoutes');
 const dbTestRoutes = require('./routes/dbTestRoutes');
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
-const orderRoutes =require('./routes/orderRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const forecastRoutes = require('./routes/forecastRoutes');
 const swaggerSpec = require('./config/swagger');
 
 // Middleware
@@ -37,7 +38,6 @@ app.get('/api-docs.json', (req, res) => {
 
 app.use('/api', dbTestRoutes);
 
-
 // Use test routes
 app.use('/api', testRoutes);
 
@@ -45,11 +45,12 @@ app.use('/api', testRoutes);
 app.get('/', (req, res) => {
   res.send('Welcome to the Smart Supply Chain API');
 });
-app.use('/api/auth',authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', productRoutes);
 app.use('/api', orderRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api', forecastRoutes);
 
 app.use(errorHandler);
 
