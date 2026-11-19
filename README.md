@@ -81,17 +81,27 @@ Small and medium-sized supply chain enterprises often suffer from:
 | **Coefficient of Determination ($R^2$)** | **0.9259** | Explains 92.6% of demand variance on unseen future data |
 | **Mean Absolute Percentage Error (MAPE)** | **7.56%** | Low relative forecast deviation across all product categories |
 
-### 2. High-Integrity Order Processing
+### 2. End-to-End Microservice Gateway & Stock Risk Engine
+* **Internal API Gateway:** The Node.js backend retrieves product pricing and historical 30-day order volume from PostgreSQL and securely proxies requests to the Python AI service via an internal HTTP client with timeout guards.
+* **Automated Stock Risk Classification:**
+  * `HEALTHY`: Available inventory meets or exceeds projected monthly demand.
+  * `POTENTIAL_SHORTAGE`: Projected demand exceeds current stock.
+  * `CRITICAL_SHORTAGE`: Current stock is under 50% of projected demand.
+  * `OVERSTOCK_RISK`: Inventory exceeds 2.5x projected demand (holding cost alert).
+* **Smart Restock Recommendation:** Calculates the exact reorder quantity needed to cover projected shortages plus a 20% safety stock buffer.
+* **Fail-Safe Resilience:** If the Python microservice is temporarily offline, the Node.js backend handles the connection gracefully with `503 Service Unavailable` without crashing the core platform.
+
+### 3. High-Integrity Order Processing
 * Order placement and stock decrement operations execute inside atomic database transactions (`prisma.$transaction(async (tx) => { ... })`).
 * If inventory is insufficient or a concurrent transaction claims the last units, the entire operation safely rolls back with `400 Insufficient Stock`.
 
-### 3. Enterprise Security & Authorization
+### 4. Enterprise Security & Authorization
 * **Dual-Token Authentication:** 15-minute JWT access tokens paired with 7-day refresh tokens stored in HTTP clients with automated transparent token rotation via Axios interceptors.
 * **Role-Based Access Control (RBAC):** Granular middleware guards (`role('ADMIN', 'SUPPLIER')`) protecting routes at the HTTP layer.
 * **Zero Secret Exposure:** User queries employ strict Prisma projections (`USER_SELECT`) to ensure bcrypt password hashes are never returned over the wire.
 * **Hardened Transport:** Enforced HTTP headers via Helmet, rate limiting via `express-rate-limit`, and scoped CORS origins.
 
-### 4. Background Jobs & Caching
+### 5. Background Jobs & Caching
 * **BullMQ Event Queue:** Asynchronous workers handle event delivery, audit logging, and email triggers without holding the client connection.
 * **Redis Cache-Aside:** High-frequency product searches and filtered queries are cached with automated invalidation when products are created, modified, or removed.
 
@@ -106,9 +116,35 @@ Small and medium-sized supply chain enterprises often suffer from:
 | **Product Image CDN** | Cloudinary CDN upload & management | Cloudinary CDN upload & management |
 | **Order Management** | View and audit all platform orders | Create orders, view own order history |
 | **Real-Time Notifications** | Instant alerts on new orders & low stock warnings | Instant alerts on order status changes |
-| **AI Demand Forecast** | View platform-wide product demand projections | View projected demand for owned products |
+| **AI Demand Forecast** | View platform-wide demand forecasts & shortages | View projected demand for owned products |
 | **User Administration** | Full user management & status activation | Restricted |
 | **Audit Log Trail** | Review timestamped actions & actor IDs | Restricted |
+
+---
+
+## 📡 REST API Reference
+
+Interactive OpenAPI documentation is mounted at `http://localhost:5000/api-docs` (Node.js) and `http://localhost:8000/docs` (FastAPI).
+
+| Method | Endpoint | Access | Description |
+|---|---|:---:|---|
+| **POST** | `/api/auth/register` | Public | Register new supplier account |
+| **POST** | `/api/auth/login` | Public | User login, returns access & refresh tokens |
+| **POST** | `/api/auth/refresh` | Public | Refresh expired access token using refresh token |
+| **GET** | `/api/products` | `ADMIN`, `SUPPLIER` | Get paginated products (supports search, sort, filter, Redis cache) |
+| **POST** | `/api/products` | `ADMIN`, `SUPPLIER` | Create new product with optional Cloudinary image upload |
+| **GET** | `/api/products/:id` | `ADMIN`, `SUPPLIER` | Get product details by ID |
+| **PUT** | `/api/products/:id` | `ADMIN`, `SUPPLIER` | Update product details and image (ownership enforced) |
+| **DELETE** | `/api/products/:id` | `ADMIN` | Delete product and write audit log |
+| **GET** | `/api/orders` | `ADMIN`, `SUPPLIER` | View orders (all for admin, user-scoped for supplier) |
+| **POST** | `/api/orders` | `ADMIN`, `SUPPLIER` | Create order with atomic stock decrement & Socket.IO broadcast |
+| **GET** | `/api/forecast/status` | `ADMIN`, `SUPPLIER` | Verify AI microservice connectivity and health |
+| **GET** | `/api/forecast` | `ADMIN`, `SUPPLIER` | Batch demand forecasts & platform-wide stock shortage summary |
+| **GET** | `/api/forecast/:productId`| `ADMIN`, `SUPPLIER` | Forecast next-month demand & evaluate inventory risk for product |
+| **GET** | `/api/notifications` | `ADMIN`, `SUPPLIER` | Fetch user notification history |
+| **PUT** | `/api/notifications/:id/read` | `ADMIN`, `SUPPLIER` | Mark single notification as read |
+| **GET** | `/api/users` | `ADMIN` | List all system users (passwords omitted) |
+| **POST** | `/api/users` | `ADMIN` | Create user with explicit role |
 
 ---
 
@@ -118,7 +154,7 @@ Small and medium-sized supply chain enterprises often suffer from:
 |---|---|
 | **Frontend** | React 19, JavaScript (ES6+), Tailwind CSS 4, React Router DOM 7, Recharts, React Hot Toast, Socket.IO Client, Axios |
 | **Main Backend** | Node.js (v22), Express.js (v5), Prisma ORM, PostgreSQL 16, JWT, Bcrypt, Multer, Helmet, Morgan, Swagger |
-| **AI / ML Service** | Python 3.12, FastAPI, Uvicorn, Scikit-learn, Pandas, NumPy, Joblib, Pydantic |
+| **AI / ML Service** | Python 3.12, FastAPI, Uvicorn, Scikit-learn, Pandas, NumPy, Joblib, Pydantic, HTTPX |
 | **Caching & Queues** | Redis 7, BullMQ, ioredis |
 | **Storage & Media** | Cloudinary (CDN Image Storage) |
 | **DevOps & Tooling** | Docker, Docker Compose, Git, ESLint, Jest, Supertest |
@@ -142,10 +178,10 @@ Smart-Supply-Chain/
 │   ├── prisma/                   # Database schema & migrations
 │   ├── src/
 │   │   ├── config/               # Prisma, Redis, Cloudinary, Swagger configs
-│   │   ├── controllers/          # HTTP request handlers (auth, product, order, user)
+│   │   ├── controllers/          # HTTP controllers (auth, product, order, user, forecast)
 │   │   ├── middleware/           # Auth, RBAC, caching, upload, error handlers
-│   │   ├── routes/               # Express endpoint definitions
-│   │   ├── services/             # Audit, notification, and email domain services
+│   │   ├── routes/               # Express routes (auth, product, order, user, forecast)
+│   │   ├── services/             # Audit, notification, email, and AI gateway services
 │   │   └── validators/           # Zod schema validation
 │   ├── tests/                    # Jest integration and unit test suites
 │   ├── workers/                  # BullMQ background job workers
@@ -194,12 +230,12 @@ npm install
 
 # Copy environment template
 cp .env.example .env
-# Configure your DATABASE_URL, JWT_SECRET, and Cloudinary keys in backend/.env
+# Configure your DATABASE_URL, JWT_SECRET, AI_SERVICE_URL, and Cloudinary keys in backend/.env
 
 # Apply Prisma migrations
 npx prisma migrate dev
 
-# Run automated tests
+# Run automated tests (21 tests across 4 suites)
 npm test
 
 # Start the development server
@@ -224,7 +260,7 @@ pip install -r requirements.txt
 # Train the model & generate artifacts (if not already trained)
 python services/train_model.py
 
-# Run prediction test suite
+# Run prediction test suite (6 tests)
 python tests/test_prediction_api.py
 
 # Start the FastAPI microservice
@@ -249,14 +285,18 @@ npm run dev
 
 ## 🧪 Testing & Verification
 
-* **Backend Unit & Integration Tests:**
+* **Backend Unit & Integration Tests (21 Passing Tests):**
   ```powershell
   cd backend
   npm test
   ```
-  *Coverage includes Product API CRUD, JWT middleware authentication, and Zod input validation.*
+  *Suites executed:*
+  * `forecastApi.test.js`: Forecast authorization, supplier isolation, stock shortage calculation, batch summaries, and 503 failover handling.
+  * `productApi.test.js`: Product CRUD, pagination, price filtering, sorting, and Redis cache-aside.
+  * `authMiddleware.test.js`: Bearer token extraction, invalid token rejection, expired token handling.
+  * `productValidator.test.js`: Zod schema validation rules.
 
-* **AI Service Prediction Tests:**
+* **AI Service Prediction Tests (6 Passing Tests):**
   ```powershell
   cd ai-service
   .\venv\Scripts\python.exe tests/test_prediction_api.py
