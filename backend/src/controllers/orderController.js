@@ -3,6 +3,7 @@ const { successResponse, errorResponse } = require('../utils/apiResponse');
 const { orderQueue } = require('../config/queue');
 const { createAuditLog } = require('../services/auditService');
 const { createNotification } = require('../services/notificationService');
+const { evaluateAndTriggerStockAlert } = require('../services/alertService');
 
 // CREATE ORDER
 exports.createOrder = async (req, res) => {
@@ -173,27 +174,11 @@ exports.createOrder = async (req, res) => {
       console.error('Failed to create/emit notifications:', notificationError);
     }
 
+    // Proactive AI demand forecasting & automated shortage alert dispatch
     try {
-      if (updatedProduct.stock < 10) {
-        const admins = await prisma.user.findMany({
-          where: { role: 'ADMIN' }
-        });
-
-        for (const admin of admins) {
-          const lowStockNotification = await createNotification(
-            admin.id,
-            'Low Stock Warning',
-            `${product.name} has only ${updatedProduct.stock} items remaining.`,
-            'WARNING'
-          );
-
-          if (io) {
-            io.to(`user-${admin.id}`).emit('notification', lowStockNotification);
-          }
-        }
-      }
-    } catch (lowStockError) {
-      console.error('Failed to handle low stock notification:', lowStockError);
+      await evaluateAndTriggerStockAlert(updatedProduct, io);
+    } catch (stockAlertError) {
+      console.error('Failed to evaluate AI stock alert:', stockAlertError.message);
     }
 
     res.status(201).json(orderWithDetails || order);
