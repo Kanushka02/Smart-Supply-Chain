@@ -105,6 +105,12 @@ Small and medium-sized supply chain enterprises often suffer from:
 * **BullMQ Event Queue:** Asynchronous workers handle event delivery, audit logging, and email triggers without holding the client connection.
 * **Redis Cache-Aside:** High-frequency product searches and filtered queries are cached with automated invalidation when products are created, modified, or removed.
 
+### 6. Interactive Frontend AI Dashboard
+* **Predictive Visualizations (Recharts):** Visualizes available inventory side-by-side with projected monthly demand, confidence intervals, and recent order volume.
+* **Real-Time Microservice Health Monitoring:** Live status banner indicating whether the Python FastAPI service is online with graceful degraded mode alerts.
+* **Actionable Procurement Guidance:** Automatically computes reorder recommendations and shortage quantities with color-coded risk alerts.
+* **Dual Role Portals:** Dedicated AI forecasting views accessible via `/admin/forecast` and `/supplier/forecast` with role-scoped data isolation.
+
 ---
 
 ## 👥 Role-Based Feature Matrix
@@ -190,11 +196,13 @@ Smart-Supply-Chain/
 │
 ├── frontend/                     # React 19 Single Page Application
 │   ├── src/
-│   │   ├── components/           # Reusable UI, layout, chart, and modal components
+│   │   ├── components/           # Reusable UI, layout, and chart components
+│   │   │   └── forecast/         # RiskBadge, ForecastChart (Recharts visualization)
 │   │   ├── context/              # Auth and Socket.IO React context providers
 │   │   ├── pages/                # Admin & Supplier role-based views
+│   │   │   └── ForecastDashboard.jsx # Full-featured AI demand forecasting portal
 │   │   ├── routes/               # Role-based protected routes
-│   │   └── services/             # Axios API client with auto-refresh interceptors
+│   │   └── services/             # Axios API client (auth, product, order, forecast)
 │   ├── package.json              # Frontend dependencies
 │   └── vite.config.js            # Vite bundler configuration
 │
