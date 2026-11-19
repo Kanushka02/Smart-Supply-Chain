@@ -1,6 +1,6 @@
 """
 Automated Integration Tests for the FastAPI Demand Prediction Microservice.
-Tests endpoints: /, /health, /model-info, and /predict.
+Tests endpoints: /, /health, /model-info, /benchmark, and /predict.
 """
 
 import os
@@ -38,6 +38,18 @@ def test_model_info_endpoint():
     assert "mae_units" in data["data"]
     assert data["data"]["r2_score"] > 0.80
     print(f"PASS: GET /model-info (R2: {data['data']['r2_score']}, MAE: {data['data']['mae_units']} units)")
+
+def test_benchmark_endpoint():
+    response = client.get("/benchmark")
+    assert response.status_code == 200
+    data = response.json()
+    assert "champion_model" in data
+    assert "rankings" in data
+    assert len(data["rankings"]) >= 4
+    # Champion should have lowest MAE
+    rankings = data["rankings"]
+    assert rankings[0]["mae_units"] <= rankings[-1]["mae_units"]
+    print(f"PASS: GET /benchmark (Champion: {data['champion_model']}, Best MAE: {rankings[0]['mae_units']} units)")
 
 def test_predict_full_payload():
     payload = {
@@ -94,6 +106,7 @@ if __name__ == "__main__":
     test_root_endpoint()
     test_health_endpoint()
     test_model_info_endpoint()
+    test_benchmark_endpoint()
     test_predict_full_payload()
     test_predict_minimal_payload()
     test_predict_validation_error()
