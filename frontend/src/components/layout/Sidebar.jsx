@@ -1,22 +1,17 @@
-import { NavLink }
-from 'react-router-dom';
-
+import { NavLink } from 'react-router-dom';
 import {
   FaHome,
   FaBox,
   FaShoppingCart,
   FaUsers,
-  FaTimes
+  FaTimes,
+  FaBrain
 } from 'react-icons/fa';
 
-import {
-  useAuth
-} from '../../context/useAuth';
+import { useAuth } from '../../context/useAuth';
 
 function Sidebar({ onClose }) {
-
-  const { user } =
-    useAuth();
+  const { user } = useAuth();
 
   const adminMenu = [
     {
@@ -24,23 +19,25 @@ function Sidebar({ onClose }) {
       path: '/admin',
       icon: <FaHome />
     },
-
     {
       name: 'Products',
       path: '/admin/products',
       icon: <FaBox />
     },
-
     {
       name: 'Orders',
       path: '/admin/orders',
       icon: <FaShoppingCart />
     },
-
     {
       name: 'Users',
       path: '/admin/users',
       icon: <FaUsers />
+    },
+    {
+      name: 'AI Forecast',
+      path: '/admin/forecast',
+      icon: <FaBrain />
     }
   ];
 
@@ -50,89 +47,51 @@ function Sidebar({ onClose }) {
       path: '/supplier',
       icon: <FaHome />
     },
-
     {
       name: 'My Products',
       path: '/supplier/products',
       icon: <FaBox />
     },
-
     {
       name: 'Orders',
       path: '/supplier/orders',
       icon: <FaShoppingCart />
+    },
+    {
+      name: 'AI Forecast',
+      path: '/supplier/forecast',
+      icon: <FaBrain />
     }
   ];
 
-  const menu =
-    user?.role === 'ADMIN'
-      ? adminMenu
-      : supplierMenu;
+  const menu = user?.role === 'ADMIN' ? adminMenu : supplierMenu;
 
   return (
-    <div
-      className="
-      bg-secondary
-      text-white
-      w-64
-      min-h-screen
-      p-5
-      relative
-      shadow-card
-      "
-    >
-
+    <div className="bg-secondary text-white w-64 min-h-screen p-5 relative shadow-card">
       {/* Close button for mobile */}
       <button
         onClick={onClose}
-        className="
-        lg:hidden
-        absolute
-        right-5
-        top-5
-        text-2xl
-        hover:text-orange-400
-        transition
-        "
+        className="lg:hidden absolute right-5 top-5 text-2xl hover:text-orange-400 transition"
       >
         <FaTimes />
       </button>
 
-      <h1
-        className="
-        text-2xl
-        font-bold
-        text-primary
-        mb-10
-        mt-8 lg:mt-0
-        "
-      >
+      <h1 className="text-2xl font-bold text-primary mb-10 mt-8 lg:mt-0">
         Supply Chain
       </h1>
 
       <nav className="space-y-3">
-
-        {menu.map(item => (
-
+        {menu.map((item) => (
           <NavLink
             key={item.name}
             to={item.path}
-
             className={({ isActive }) =>
-              `
-              flex items-center
-              gap-3
-              p-3 rounded-xl
-              transition
-              font-medium
-              ${
+              `flex items-center gap-3 p-3 rounded-xl transition font-medium ${
                 isActive
                   ? 'bg-primary text-white shadow-lg shadow-orange-500/20'
                   : 'text-stone-300 hover:bg-stone-800 hover:text-white'
-              }
-              `
+              }`
             }
-
             onClick={() => {
               if (onClose) onClose();
             }}
@@ -140,11 +99,8 @@ function Sidebar({ onClose }) {
             {item.icon}
             {item.name}
           </NavLink>
-
         ))}
-
       </nav>
-
     </div>
   );
 }

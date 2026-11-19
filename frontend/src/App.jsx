@@ -5,207 +5,139 @@ import {
   Navigate
 } from 'react-router-dom';
 
-import { useAuth }
-from './context/useAuth';
+import { useAuth } from './context/useAuth';
+import ProtectedRoute from './routes/ProtectedRoute';
 
-import ProtectedRoute
-from './routes/ProtectedRoute';
-
-import Login
-from './pages/Login';
-
-import Register
-from './pages/Register';
-
-import Notifications
-from './pages/Notifications';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Notifications from './pages/Notifications';
+import ForecastDashboard from './pages/ForecastDashboard';
 
 // ADMIN
-import AdminDashboard
-from './pages/admin/Dashboard';
-
-import AdminProducts
-from './pages/admin/Products';
-
-import AdminOrders
-from './pages/admin/Orders';
-
-import AdminUsers
-from './pages/admin/Users';
+import AdminDashboard from './pages/admin/Dashboard';
+import AdminProducts from './pages/admin/Products';
+import AdminOrders from './pages/admin/Orders';
+import AdminUsers from './pages/admin/Users';
 
 // SUPPLIER
-import SupplierDashboard
-from './pages/supplier/Dashboard';
-
-import SupplierProducts
-from './pages/supplier/Products';
-
-import SupplierOrders
-from './pages/supplier/Orders';
+import SupplierDashboard from './pages/supplier/Dashboard';
+import SupplierProducts from './pages/supplier/Products';
+import SupplierOrders from './pages/supplier/Orders';
 
 function App() {
+  const { user, loading } = useAuth();
 
-  const {
-    user,
-    loading
-  } = useAuth();
-
-  if (loading)
-    return null;
+  if (loading) return null;
 
   return (
-
     <BrowserRouter>
-
       <Routes>
-
-        {/* LOGIN */}
-
-        <Route
-          path="/login"
-          element={<Login />}
-        />
-
-        <Route
-          path="/register"
-          element={<Register />}
-        />
+        {/* LOGIN & REGISTER */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         {/* DEFAULT REDIRECT */}
-
         <Route
           path="/"
           element={
-
             user ? (
-
-              user.role
-              === 'ADMIN'
-
-              ? (
-                <Navigate
-                  to="/admin"
-                />
+              user.role === 'ADMIN' ? (
+                <Navigate to="/admin" />
+              ) : (
+                <Navigate to="/supplier" />
               )
-
-              : (
-                <Navigate
-                  to="/supplier"
-                />
-              )
-
             ) : (
-
-              <Navigate
-                to="/login"
-              />
-
+              <Navigate to="/login" />
             )
           }
         />
 
-        {/* ADMIN */}
-
+        {/* ADMIN ROUTES */}
         <Route
           path="/admin"
-
           element={
-            <ProtectedRoute
-              role="ADMIN"
-            >
+            <ProtectedRoute role="ADMIN">
               <AdminDashboard />
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/admin/products"
-
           element={
-            <ProtectedRoute
-              role="ADMIN"
-            >
+            <ProtectedRoute role="ADMIN">
               <AdminProducts />
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/admin/orders"
-
           element={
-            <ProtectedRoute
-              role="ADMIN"
-            >
+            <ProtectedRoute role="ADMIN">
               <AdminOrders />
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/admin/users"
-
           element={
-            <ProtectedRoute
-              role="ADMIN"
-            >
+            <ProtectedRoute role="ADMIN">
               <AdminUsers />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/forecast"
+          element={
+            <ProtectedRoute role="ADMIN">
+              <ForecastDashboard />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* SUPPLIER */}
-
+        {/* SUPPLIER ROUTES */}
         <Route
           path="/supplier"
-
           element={
-            <ProtectedRoute
-              role="SUPPLIER"
-            >
+            <ProtectedRoute role="SUPPLIER">
               <SupplierDashboard />
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/supplier/products"
-
           element={
-            <ProtectedRoute
-              role="SUPPLIER"
-            >
+            <ProtectedRoute role="SUPPLIER">
               <SupplierProducts />
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/supplier/orders"
-
           element={
-            <ProtectedRoute
-              role="SUPPLIER"
-            >
+            <ProtectedRoute role="SUPPLIER">
               <SupplierOrders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/supplier/forecast"
+          element={
+            <ProtectedRoute role="SUPPLIER">
+              <ForecastDashboard />
             </ProtectedRoute>
           }
         />
 
         {/* NOTIFICATIONS */}
-
         <Route
           path="/notifications"
-
           element={
             <ProtectedRoute>
               <Notifications />
             </ProtectedRoute>
           }
         />
-
       </Routes>
-
     </BrowserRouter>
   );
 }
