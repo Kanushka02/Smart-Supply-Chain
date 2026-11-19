@@ -9,7 +9,8 @@ import {
   FaChartLine,
   FaArrowRight,
   FaSyncAlt,
-  FaRobot
+  FaRobot,
+  FaBell
 } from 'react-icons/fa';
 
 import DashboardLayout from '../components/layout/DashboardLayout';
@@ -21,7 +22,8 @@ import ForecastChart from '../components/forecast/ForecastChart';
 import {
   getAiServiceStatus,
   getBatchForecast,
-  getProductForecast
+  getProductForecast,
+  triggerRiskAlertScan
 } from '../services/forecastService';
 import { getProducts } from '../services/productService';
 
@@ -31,6 +33,7 @@ export default function ForecastDashboard() {
   const [summary, setSummary] = useState(null);
   const [forecasts, setForecasts] = useState([]);
   const [products, setProducts] = useState([]);
+  const [auditScanning, setAuditScanning] = useState(false);
 
   // Selected product deep-dive state
   const [selectedProductId, setSelectedProductId] = useState('');
@@ -92,6 +95,29 @@ export default function ForecastDashboard() {
     }
   };
 
+  const handleRunRiskAudit = async () => {
+    setAuditScanning(true);
+    try {
+      const res = await triggerRiskAlertScan();
+      const summaryData = res.data?.data;
+      const count = summaryData?.alertsTriggered || 0;
+      if (count > 0) {
+        toast.success(
+          `AI Audit complete! ${count} shortage alert(s) dispatched to suppliers and administrators.`,
+          { duration: 5000 }
+        );
+      } else {
+        toast.success('Inventory audit complete. All stock levels are currently healthy!');
+      }
+      await loadDashboardData();
+    } catch (err) {
+      console.error('Audit scan error:', err);
+      toast.error(err.response?.data?.message || 'Failed to trigger shortage alert scan');
+    } finally {
+      setAuditScanning(false);
+    }
+  };
+
   useEffect(() => {
     loadDashboardData();
   }, []);
@@ -133,8 +159,8 @@ export default function ForecastDashboard() {
           </p>
         </div>
 
-        {/* AI Health Badge & Refresh Button */}
-        <div className="flex items-center gap-3">
+        {/* AI Health Badge, Scan Button & Refresh */}
+        <div className="flex flex-wrap items-center gap-3">
           <div
             className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold shadow-sm border ${
               isAiOnline
@@ -151,6 +177,16 @@ export default function ForecastDashboard() {
               ? 'FastAPI AI Microservice Online'
               : 'AI Service Offline (503)'}
           </div>
+
+          <button
+            onClick={handleRunRiskAudit}
+            disabled={auditScanning}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-primary text-white hover:bg-orange-600 shadow-sm transition text-xs font-semibold disabled:opacity-50"
+            title="Scan catalog for stock shortages and dispatch real-time notifications"
+          >
+            <FaBell className={auditScanning ? 'animate-bounce' : ''} />
+            {auditScanning ? 'Scanning Catalog...' : 'Scan & Alert Shortages'}
+          </button>
 
           <button
             onClick={loadDashboardData}
