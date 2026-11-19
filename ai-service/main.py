@@ -3,6 +3,8 @@ Smart Supply Chain AI Service - FastAPI Application.
 Provides demand forecasting microservice endpoints for the Node.js backend & React frontend.
 """
 
+import os
+import json
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from app.schemas.prediction_schema import PredictionRequest, PredictionResponse
@@ -53,6 +55,25 @@ def get_model_info():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve model info: {str(exc)}"
+        )
+
+@app.get("/benchmark", tags=["Forecasting"], summary="Get multi-model benchmark evaluation results")
+def get_benchmark_report():
+    """
+    Returns multi-model comparative performance metrics (R², MAE, RMSE, MAPE, latency)
+    benchmarked on the identical chronological test set.
+    """
+    report_path = os.path.join("models", "benchmark_report.json")
+    if not os.path.exists(report_path):
+        from services.benchmark_models import run_benchmark
+        return run_benchmark()
+    try:
+        with open(report_path, "r") as f:
+            return json.load(f)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to read benchmark report: {str(exc)}"
         )
 
 @app.post(
