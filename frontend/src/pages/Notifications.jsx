@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaBell, FaTrash, FaCheckCircle, FaInfoCircle, FaExclamationTriangle, FaTimesCircle } from 'react-icons/fa';
+import { FaBell, FaTrash, FaCheckCircle, FaInfoCircle, FaExclamationTriangle, FaTimesCircle, FaRobot } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import notificationService from '../services/notificationService';
 import LoadingState from '../components/common/LoadingState';
@@ -84,10 +84,12 @@ function NotificationsPage() {
     switch (type) {
       case 'SUCCESS':
         return <FaCheckCircle className="text-green-500" />;
-      case 'WARNING':
-        return <FaExclamationTriangle className="text-yellow-500" />;
+      case 'CRITICAL_SHORTAGE':
       case 'ERROR':
         return <FaTimesCircle className="text-red-500" />;
+      case 'POTENTIAL_SHORTAGE':
+      case 'WARNING':
+        return <FaExclamationTriangle className="text-amber-500" />;
       default:
         return <FaInfoCircle className="text-blue-500" />;
     }
@@ -97,14 +99,25 @@ function NotificationsPage() {
     switch (type) {
       case 'SUCCESS':
         return 'bg-green-50 border-l-4 border-green-500';
-      case 'WARNING':
-        return 'bg-yellow-50 border-l-4 border-yellow-500';
+      case 'CRITICAL_SHORTAGE':
       case 'ERROR':
         return 'bg-red-50 border-l-4 border-red-500';
+      case 'POTENTIAL_SHORTAGE':
+      case 'WARNING':
+        return 'bg-amber-50 border-l-4 border-amber-500';
       default:
         return 'bg-blue-50 border-l-4 border-blue-500';
     }
   };
+
+  const filterTabs = [
+    { label: 'All', value: 'ALL' },
+    { label: 'Critical Shortages', value: 'CRITICAL_SHORTAGE' },
+    { label: 'Potential Shortages', value: 'POTENTIAL_SHORTAGE' },
+    { label: 'Warnings', value: 'WARNING' },
+    { label: 'Info', value: 'INFO' },
+    { label: 'Success', value: 'SUCCESS' }
+  ];
 
   const filteredNotifications =
     filterType === 'ALL'
@@ -143,22 +156,22 @@ function NotificationsPage() {
         </div>
       </div>
 
-      {/* Filter */}
-      <div className="mb-6 flex gap-2">
-        {['ALL', 'SUCCESS', 'INFO', 'WARNING', 'ERROR'].map((type) => (
+      {/* Filter Tabs */}
+      <div className="mb-6 flex flex-wrap gap-2">
+        {filterTabs.map((tab) => (
           <button
-            key={type}
+            key={tab.value}
             onClick={() => {
-              setFilterType(type);
+              setFilterType(tab.value);
               setPage(1);
             }}
-            className={`px-4 py-2 rounded-lg transition ${
-              filterType === type
-                ? 'bg-primary text-white'
+            className={`px-3.5 py-1.5 text-sm font-medium rounded-lg transition ${
+              filterType === tab.value
+                ? 'bg-primary text-white shadow-sm'
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >
-            {type}
+            {tab.label}
           </button>
         ))}
       </div>
@@ -179,12 +192,21 @@ function NotificationsPage() {
                     {getNotificationIcon(notification.type)}
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold text-lg text-gray-800">
                         {notification.title}
                       </h3>
+                      {(notification.type === 'CRITICAL_SHORTAGE' || notification.type === 'POTENTIAL_SHORTAGE') && (
+                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          notification.type === 'CRITICAL_SHORTAGE'
+                            ? 'bg-red-100 text-red-800 border border-red-200'
+                            : 'bg-amber-100 text-amber-800 border border-amber-200'
+                        }`}>
+                          <FaRobot className="text-[10px]" /> AI Demand Alert
+                        </span>
+                      )}
                       {!notification.isRead && (
-                        <span className="bg-primary text-white text-xs px-2 py-1 rounded-full">
+                        <span className="bg-primary text-white text-xs px-2 py-0.5 rounded-full">
                           Unread
                         </span>
                       )}
