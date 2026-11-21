@@ -236,7 +236,24 @@ Smart-Supply-Chain/
 
 ## ⚡ Quick Start & Local Setup
 
-### Prerequisites
+### 🐳 Option A: One-Command Docker Setup (Recommended)
+With Docker Desktop installed and running, you can boot the entire multi-service platform (PostgreSQL, Redis, AI Microservice, Node.js Backend, and React Frontend) with a single command:
+
+```powershell
+docker compose up --build
+```
+
+* **Frontend Portal:** `http://localhost:3000`
+* **Node.js REST API:** `http://localhost:5000`
+* **Node.js Interactive Swagger Docs:** `http://localhost:5000/api-docs`
+* **Python FastAPI Microservice:** `http://localhost:8000`
+* **FastAPI Interactive Docs:** `http://localhost:8000/docs`
+
+---
+
+### 💻 Option B: Manual Local Setup
+
+#### Prerequisites
 * **Node.js:** v20+ (v22 recommended)
 * **Python:** 3.10+ (3.12 recommended)
 * **PostgreSQL:** 15+ running on port `5432`
@@ -244,14 +261,14 @@ Smart-Supply-Chain/
 
 ---
 
-### 1. Database Setup
+#### 1. Database Setup
 ```sql
 CREATE DATABASE supply_chain_db;
 ```
 
 ---
 
-### 2. Main Backend Setup (Node.js)
+#### 2. Main Backend Setup (Node.js)
 ```powershell
 cd backend
 npm install
@@ -274,7 +291,7 @@ npm run dev
 
 ---
 
-### 3. AI Service Setup (Python FastAPI)
+#### 3. AI Service Setup (Python FastAPI)
 ```powershell
 cd ../ai-service
 
@@ -299,7 +316,7 @@ uvicorn main:app --reload --port 8000
 
 ---
 
-### 4. Frontend Setup (React 19)
+#### 4. Frontend Setup (React 19)
 ```powershell
 cd ../frontend
 npm install
