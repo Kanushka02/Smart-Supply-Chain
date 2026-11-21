@@ -1,9 +1,14 @@
 const redis = require('redis');
 
+const redisHost = process.env.REDIS_HOST;
+const redisPort = process.env.REDIS_PORT || 6379;
+const defaultRedisUrl = redisHost ? `redis://${redisHost}:${redisPort}` : 'redis://127.0.0.1:6379';
+const redisUrl = process.env.REDIS_URL || defaultRedisUrl;
+
 const client = redis.createClient({
-  url: process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+  url: redisUrl,
   socket: {
-    reconnectStrategy: false
+    reconnectStrategy: (retries) => Math.min(retries * 100, 3000)
   }
 });
 
