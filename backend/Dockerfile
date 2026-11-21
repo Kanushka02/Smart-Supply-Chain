@@ -9,16 +9,20 @@ WORKDIR /app
 # Install OpenSSL and libc dependencies for Prisma on Alpine Linux
 RUN apk add --no-cache openssl libc6-compat
 
-# Copy package manifests and Prisma schema
+# Copy package manifests, Prisma config, and schema
 COPY package*.json ./
+COPY prisma.config.ts ./
 COPY prisma ./prisma/
 
-# Install dependencies and generate Prisma Client
-RUN npm ci --no-audit
+# Install dependencies
+RUN npm install
+
+# Generate Prisma Client for Alpine Linux
 RUN npx prisma generate
 
-# Copy backend source code
+# Copy backend source code and background workers
 COPY src ./src
+COPY workers ./workers
 COPY server.js ./
 
 # Expose API port
