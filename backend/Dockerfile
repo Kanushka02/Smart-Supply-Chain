@@ -1,13 +1,13 @@
 # =============================================================================
 # Production Dockerfile for Node.js Backend API
 # =============================================================================
-FROM node:22-slim
+FROM node:22-alpine
 
 # Set working directory
 WORKDIR /app
 
-# Install OpenSSL for Prisma
-RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+# Install OpenSSL and libc dependencies for Prisma on Alpine Linux
+RUN apk add --no-cache openssl libc6-compat
 
 # Copy package manifests and Prisma schema
 COPY package*.json ./
