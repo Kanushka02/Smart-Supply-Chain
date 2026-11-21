@@ -1,0 +1,125 @@
+name: Smart Supply Chain CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # ===========================================================================
+  # 1. Backend Service Verification (Node.js, Prisma, Jest)
+  # ===========================================================================
+  test-backend:
+    name: Backend Test Suite
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: supply_chain_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install Backend Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run Backend Integration & Unit Tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/supply_chain_db?schema=public
+          JWT_SECRET: testsecret
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: npm test
+
+  # ===========================================================================
+  # 2. AI Service Verification (Python FastAPI, Scikit-learn)
+  # ===========================================================================
+  test-ai-service:
+    name: AI Microservice Test Suite
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./ai-service
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: ai-service/requirements.txt
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run FastAPI Integration Tests
+        run: python tests/test_prediction_api.py
+
+  # ===========================================================================
+  # 3. Frontend Production Build Verification (React 19, Vite)
+  # ===========================================================================
+  build-frontend:
+    name: Frontend Build Verification
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Frontend Dependencies
+        run: npm install
+
+      - name: Verify Vite Production Build
+        run: npm run build
