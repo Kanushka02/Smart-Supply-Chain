@@ -58,6 +58,7 @@ pnpm-debug.log*
 backend/src/generated/prisma
 
 # IDEs & Operating System Artifacts
+.agents/
 .vscode/*
 !.vscode/extensions.json
 .idea/
