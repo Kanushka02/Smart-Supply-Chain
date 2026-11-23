@@ -10,6 +10,8 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.x-38B2AC.svg)](https://tailwindcss.com/)
 [![Redis](https://img.shields.io/badge/Redis-7.x-DC382D.svg)](https://redis.io/)
 [![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.7-F7931E.svg)](https://scikit-learn.org/)
+[![Docker Compose](https://img.shields.io/badge/Docker_Compose-5_Services-2496ED.svg?logo=docker&logoColor=white)](docker-compose.yml)
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF.svg?logo=githubactions&logoColor=white)](.github/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
@@ -194,12 +196,14 @@ Interactive OpenAPI documentation is mounted at `http://localhost:5000/api-docs`
 
 ```text
 Smart-Supply-Chain/
+├── .github/workflows/ci.yml      # Multi-job automated CI/CD pipeline (Backend, AI, Frontend)
 ├── ai-service/                   # Python FastAPI ML Microservice
 │   ├── app/schemas/              # Pydantic request & response schemas
 │   ├── data/                     # Cleaned time-series historical datasets
 │   ├── models/                   # Saved ML models, scalers, and benchmark reports
 │   ├── services/                 # Preprocessing, benchmark suite, training, inference
 │   ├── tests/                    # Integration test suite for prediction endpoints
+│   ├── Dockerfile                # Production Python 3.12-slim container definition
 │   ├── main.py                   # FastAPI server entry point
 │   └── requirements.txt          # Python dependencies
 │
@@ -213,6 +217,8 @@ Smart-Supply-Chain/
 │   │   └── server.js             # HTTP server with Socket.IO attachment
 │   ├── prisma/                   # PostgreSQL schema and migration scripts
 │   ├── tests/                    # Automated integration and unit test suites
+│   ├── Dockerfile                # Node.js 22-alpine production container definition
+│   ├── prisma.config.ts          # Modern Prisma configuration
 │   └── package.json              # Backend dependencies
 │
 ├── frontend/                     # React 19 Single Page Application
@@ -224,11 +230,14 @@ Smart-Supply-Chain/
 │   │   │   └── ForecastDashboard.jsx # Full-featured AI demand forecasting portal
 │   │   ├── routes/               # Role-based protected routes
 │   │   └── services/             # Axios API client (auth, product, order, forecast)
+│   ├── Dockerfile                # Production Nginx Alpine container definition
+│   ├── nginx.conf                # Nginx SPA client-side routing & cache headers
 │   ├── package.json              # Frontend dependencies
 │   └── vite.config.js            # Vite bundler configuration
 │
-├── docs/                         # Internal architectural notes and specs
-├── docker-compose.yml            # Local container configuration (Redis)
+├── docs/                         # System architecture and deployment guides
+│   └── DEPLOYMENT_GUIDE.md       # Production cloud architecture & deployment strategies
+├── docker-compose.yml            # Multi-container orchestration (5 connected microservices)
 └── README.md                     # Project documentation
 ```
 
@@ -348,6 +357,60 @@ npm run dev
   .\venv\Scripts\python.exe tests/test_prediction_api.py
   ```
   *Verifies health check, model info metrics, multi-model benchmark rankings, valid demand forecasting, and Pydantic validation error handling.*
+
+---
+
+## 🚢 Automated CI/CD Pipeline
+
+The repository includes a production-grade **GitHub Actions CI/CD pipeline** ([.github/workflows/ci.yml](.github/workflows/ci.yml)) configured to run on every `push` and `pull_request` to the `main` branch:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        GitHub Actions Workflow                         │
+├───────────────────────┬────────────────────────┬───────────────────────┤
+│    test-backend       │    test-ai-service     │    build-frontend     │
+├───────────────────────┼────────────────────────┼───────────────────────┤
+│ • Ubuntu Runner       │ • Python 3.12 Runner   │ • Node.js 22 Runner   │
+│ • Service: Postgres 16│ • Automated Pip Cache  │ • Vite Build Test     │
+│ • Service: Redis 7    │ • FastAPI Health Probe │ • Production Bundle   │
+│ • Prisma Migrations   │ • Model Artifact Check │   Validation          │
+│ • 29 Jest Tests Pass  │ • 7 Prediction Tests   │ • Zero Error Policy   │
+└───────────────────────┴────────────────────────┴───────────────────────┘
+```
+
+1. **Backend Integration Pipeline (`test-backend`):** Spins up live PostgreSQL 16 and Redis 7 service containers in the GitHub Actions runner, applies all Prisma migrations, and executes all 29 integration and unit tests.
+2. **AI Microservice Pipeline (`test-ai-service`):** Provisions Python 3.12, caches dependencies, and executes the FastAPI test suite against versioned Scikit-learn model artifacts.
+3. **Frontend Build Pipeline (`build-frontend`):** Validates JSX compilation, Tailwind CSS generation, and production bundle minification via Vite.
+
+---
+
+## ☁️ Production Cloud Architecture
+
+For production deployments, the system is designed to scale horizontally across decoupled cloud infrastructure. Complete deployment strategies, Nginx reverse proxy configurations, environment variable checklists, and zero-downtime migration protocols are documented in:
+
+👉 **[Production Cloud Architecture & Deployment Guide](docs/DEPLOYMENT_GUIDE.md)**
+
+### Deployment Topologies Covered:
+* **Option A: Modern Cloud PaaS (Render / Railway / DigitalOcean App Platform):** Fully managed, automated Git-driven deployments for cost-effective demonstrations ($15–$30/mo).
+* **Option B: AWS Enterprise Production (ECS Fargate + RDS + ElastiCache):** Serverless container orchestration with Multi-AZ PostgreSQL failover, Redis cluster mode, and Application Load Balancer routing.
+* **Option C: Single-Node VPS (Docker Compose + Nginx + Let's Encrypt):** High-control, low-cost ($6–$12/mo) self-hosted deployment matching the local containerized environment.
+
+---
+
+## 💼 Software Engineering Competency Matrix
+
+*Designed as a flagship portfolio project demonstrating enterprise software engineering proficiencies:*
+
+| Domain | Competencies Demonstrated in Codebase |
+|---|---|
+| **System Architecture** | Microservices architecture, API Gateway pattern, event-driven background processing, asynchronous message queues (BullMQ), dual-role RBAC. |
+| **Backend Engineering** | Node.js 22, Express 5, RESTful API design, JWT dual-token rotation, Helmet security headers, rate limiting, and centralized error handling middleware. |
+| **Database Engineering** | PostgreSQL 16, Prisma ORM 7, composite query indexing, foreign key constraints, atomic multi-model transactions (`$transaction`), and audit logging. |
+| **Applied Machine Learning** | Time-series feature engineering (temporal lags, rolling averages, seasonality), no target leakage, multi-model benchmarking (Lasso, Ridge, GBDT, Random Forest), confidence intervals, and FastAPI microservice decoupling. |
+| **High-Performance Caching** | Redis 7 Cache-Aside pattern with TTL expiration, selective cache invalidation on write events, and auto-reconnecting socket connections. |
+| **Frontend Architecture** | React 19, Tailwind CSS 4, responsive single-page application (SPA), protected route guards, React Router DOM 7, real-time WebSocket listeners, Recharts predictive charts. |
+| **DevOps & Cloud Readiness** | Docker multi-stage builds, Alpine Linux optimization, Docker Compose 5-service virtual network orchestration, GitHub Actions CI/CD, Nginx reverse proxying. |
+| **Software Quality & Testing** | 36 automated unit and integration tests across backend and AI services, Zod input validation schemas, Pydantic type safety, and OpenAPI (Swagger) documentation. |
 
 ---
 
