@@ -252,7 +252,7 @@ With Docker Desktop installed and running, you can boot the entire multi-service
 docker compose up --build
 ```
 
-* **Frontend Portal:** `http://localhost:3000`
+* **Frontend Portal:** `http://localhost:8080`
 * **Node.js REST API:** `http://localhost:5000`
 * **Node.js Interactive Swagger Docs:** `http://localhost:5000/api-docs`
 * **Python FastAPI Microservice:** `http://localhost:8000`
