@@ -86,7 +86,7 @@ services:
       AI_SERVICE_URL: http://ai-service:8000
       JWT_SECRET: supersecret_supply_chain_jwt_key_2026
       JWT_REFRESH_SECRET: supersecret_supply_chain_refresh_jwt_key_2026
-      FRONTEND_URL: http://localhost:3000
+      FRONTEND_URL: http://localhost:8080
     command: >
       sh -c "npx prisma migrate deploy && node server.js"
     networks:
@@ -105,7 +105,7 @@ services:
     container_name: smart-supply-chain-frontend
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "8080:80"
     depends_on:
       - backend
     networks:
