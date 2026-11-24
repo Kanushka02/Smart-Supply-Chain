@@ -1,327 +1,178 @@
-import {
-  useEffect,
-  useState
-}
-from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
+import { FaPlus, FaUsers, FaUserShield, FaTruck } from 'react-icons/fa';
 
-import toast
-  from 'react-hot-toast';
-
-import DashboardLayout
-from '../../components/layout/DashboardLayout';
-
-import ConfirmDialog
-from '../../components/common/ConfirmDialog';
-
-import LoadingState
-from '../../components/common/LoadingState';
-
-import UserTable
-from '../../components/users/UserTable';
-
-import UserModal
-from '../../components/users/UserModal';
+import DashboardLayout from '../../components/layout/DashboardLayout';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
+import LoadingState from '../../components/common/LoadingState';
+import SearchFilterBar from '../../components/common/SearchFilterBar';
+import StatCard from '../../components/dashboard/StatCard';
+import UserTable from '../../components/users/UserTable';
+import UserModal from '../../components/users/UserModal';
 
 import {
   getUsers,
   createUser,
   updateUser,
   deleteUser
-}
-from '../../services/userService';
+} from '../../services/userService';
+
+const ROLE_FILTERS = [
+  { key: 'ALL', label: 'All Roles' },
+  { key: 'ADMIN', label: 'Admins' },
+  { key: 'SUPPLIER', label: 'Suppliers' }
+];
 
 function Users() {
+  const [users, setUsers] = useState([]);
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('ALL');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [deletingUser, setDeletingUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const [users,
-    setUsers] =
-    useState([]);
-
-  const [search,
-    setSearch] =
-    useState('');
-
-  const [isModalOpen,
-    setIsModalOpen] =
-    useState(false);
-
-  const [editingUser,
-    setEditingUser] =
-    useState(null);
-
-  const [deletingUser,
-    setDeletingUser] =
-    useState(null);
-
-  const [loading,
-    setLoading] =
-    useState(true);
-
-  const fetchUsers =
-  async () => {
-
+  const fetchUsers = useCallback(async () => {
     try {
-      const res =
-        await getUsers();
-
+      const res = await getUsers();
       const usersData = Array.isArray(res.data)
         ? res.data
         : Array.isArray(res.data?.data)
           ? res.data.data
           : [];
-
       setUsers(usersData);
     } catch (error) {
       console.error('Failed to fetch users:', error);
-      toast.error(
-        'Failed to load users'
-      );
+      toast.error('Failed to load users');
       setUsers([]);
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    async function loadUsers() {
-
-      try {
-        const res =
-          await getUsers();
-
-        const usersData = Array.isArray(res.data)
-          ? res.data
-          : Array.isArray(res.data?.data)
-            ? res.data.data
-            : [];
-
-        setUsers(usersData);
-      } catch (error) {
-        console.error('Failed to fetch users:', error);
-        toast.error(
-          'Failed to load users'
-        );
-        setUsers([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadUsers();
   }, []);
 
-  const handleSave =
-  async (userData) => {
+  useEffect(() => {
+    const load = async () => {
+      await fetchUsers();
+    };
+    void load();
+  }, [fetchUsers]);
 
+  const handleSave = async (data) => {
     try {
       if (editingUser) {
-
-        await updateUser(
-          editingUser.id,
-          userData
-        );
-
-        toast.success(
-          'User Updated'
-        );
-
+        await updateUser(editingUser.id, data);
+        toast.success('User updated');
       } else {
-
-        await createUser(
-          userData
-        );
-
-        toast.success(
-          'User Created'
-        );
+        await createUser(data);
+        toast.success('User created');
       }
-
       fetchUsers();
-
-      setEditingUser(
-        null
-      );
+      setEditingUser(null);
     } catch (error) {
       console.error('Failed to save user:', error);
-      toast.error(
-        'Something went wrong'
-      );
+      toast.error(error.response?.data?.message || 'Operation failed');
     }
   };
 
-  const handleDelete =
-  (user) => {
-    setDeletingUser(user);
-  };
-
-  const confirmDelete =
-  async () => {
+  const confirmDelete = async () => {
     try {
-      await deleteUser(
-        deletingUser.id
-      );
-
-      toast.success(
-        'User Deleted'
-      );
-
+      await deleteUser(deletingUser.id);
+      toast.success('User deleted');
       setDeletingUser(null);
-
       fetchUsers();
     } catch (error) {
       console.error('Failed to delete user:', error);
-      toast.error(
-        'Failed to delete user'
-      );
+      toast.error(error.response?.data?.message || 'Failed to delete user');
     }
   };
 
-  const filteredUsers =
-    users.filter(user =>
-      user.name
-      .toLowerCase()
-      .includes(
-        search
-        .toLowerCase()
-      )
-    );
+  const filteredUsers = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return users.filter((user) => {
+      const matchesSearch =
+        !query ||
+        user.name?.toLowerCase().includes(query) ||
+        user.email?.toLowerCase().includes(query) ||
+        user.companyName?.toLowerCase().includes(query);
+      const matchesRole = roleFilter === 'ALL' || user.role === roleFilter;
+      return matchesSearch && matchesRole;
+    });
+  }, [users, search, roleFilter]);
+
+  const adminCount = users.filter((u) => u.role === 'ADMIN').length;
+  const supplierCount = users.filter((u) => u.role === 'SUPPLIER').length;
 
   return (
-
     <DashboardLayout>
-
-      <div
-        className="
-        flex flex-col
-        gap-4
-        sm:flex-row sm:justify-between
-        sm:items-center
-        mb-6
-        "
-      >
-
-        <h1
-          className="
-          text-3xl
-          font-bold
-          "
-        >
-          Users Management
-        </h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <p className="text-sm text-slate-500">
+          Manage platform administrators, supplier organizations, and active account permissions.
+        </p>
 
         <button
-          onClick={() =>
-            setIsModalOpen(
-              true
-            )
-          }
-
-          className="
-          bg-primary
-          text-white
-          px-5 py-3
-          rounded-xl
-          hover:bg-indigo-700
-          transition
-          w-full
-          sm:w-auto
-          "
+          type="button"
+          onClick={() => {
+            setEditingUser(null);
+            setIsModalOpen(true);
+          }}
+          className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md shadow-indigo-600/20 transition cursor-pointer shrink-0"
         >
+          <FaPlus className="text-xs" />
           Add User
         </button>
-
       </div>
 
-      <input
-        type="text"
-        placeholder="Search users..."
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <StatCard title="Total Accounts" value={users.length} icon={<FaUsers />} />
+        <StatCard title="Administrators" value={adminCount} icon={<FaUserShield />} />
+        <StatCard title="Supplier Partners" value={supplierCount} icon={<FaTruck />} />
+      </div>
 
-        value={search}
-
-        onChange={(e) =>
-          setSearch(
-            e.target.value
-          )
-        }
-
-        className="
-        w-full
-        border
-        border-gray-300
-        p-3
-        rounded-xl
-        mb-5
-        focus:outline-none
-        focus:border-primary
-        "
+      <SearchFilterBar
+        search={search}
+        onSearchChange={setSearch}
+        placeholder="Search by name, email, or company..."
+        filters={ROLE_FILTERS}
+        activeFilter={roleFilter}
+        onFilterChange={setRoleFilter}
+        resultCount={filteredUsers.length}
       />
 
       {loading ? (
-        <LoadingState label="Loading users" />
+        <LoadingState label="Loading user directory" />
       ) : (
         <UserTable
-          users={
-            filteredUsers
-          }
-
+          users={filteredUsers}
           onEdit={(user) => {
-
-            setEditingUser(
-              user
-            );
-
-            setIsModalOpen(
-              true
-            );
+            setEditingUser(user);
+            setIsModalOpen(true);
           }}
-
-          onDelete={
-            handleDelete
-          }
+          onDelete={(user) => setDeletingUser(user)}
         />
       )}
 
       <UserModal
-        key={
-          editingUser?.id || 'new-user'
-        }
-        isOpen={
-          isModalOpen
-        }
-
+        key={editingUser?.id || 'new-user'}
+        isOpen={isModalOpen}
         onClose={() => {
-
-          setIsModalOpen(
-            false
-          );
-
-          setEditingUser(
-            null
-          );
+          setIsModalOpen(false);
+          setEditingUser(null);
         }}
-
-        onSave={
-          handleSave
-        }
-
-        editingUser={
-          editingUser
-        }
+        onSave={handleSave}
+        editingUser={editingUser}
       />
 
       <ConfirmDialog
-        isOpen={Boolean(
-          deletingUser
-        )}
+        isOpen={Boolean(deletingUser)}
         title="Delete user"
-        message={`Delete ${deletingUser?.name || 'this user'}? This action cannot be undone.`}
-        onCancel={() =>
-          setDeletingUser(null)
+        message={
+          deletingUser
+            ? `Delete "${deletingUser.name}"? This action cannot be undone.`
+            : ''
         }
-        onConfirm={
-          confirmDelete
-        }
+        onCancel={() => setDeletingUser(null)}
+        onConfirm={confirmDelete}
       />
-
     </DashboardLayout>
   );
 }

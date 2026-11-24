@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import { FaPlus, FaBrain } from 'react-icons/fa';
+import { FaPlus, FaBrain, FaBox, FaExclamationTriangle, FaMoneyBillWave } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingState from '../../components/common/LoadingState';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
+import SearchFilterBar from '../../components/common/SearchFilterBar';
+import StatCard from '../../components/dashboard/StatCard';
 import ProductTable from '../../components/product/ProductTable';
 import ProductModal from '../../components/product/ProductModal';
 
@@ -17,28 +19,36 @@ import {
 } from '../../services/productService';
 import { useAuth } from '../../context/useAuth';
 import { useSocket } from '../../context/SocketContext';
+import { formatCurrency } from '../../utils/formatters';
+
+const STOCK_FILTERS = [
+  { key: 'ALL', label: 'All Items' },
+  { key: 'IN_STOCK', label: 'Healthy (25+)' },
+  { key: 'LOW', label: 'Low & Critical (<25)' }
+];
 
 function SupplierProducts() {
   const { user } = useAuth();
   const { socket } = useSocket();
 
   const [products, setProducts] = useState([]);
+  const [search, setSearch] = useState('');
+  const [stockFilter, setStockFilter] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [deletingProduct, setDeletingProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const res = await getProducts();
       const payload = res.data;
       const list = Array.isArray(payload)
         ? payload
         : Array.isArray(payload?.data)
-        ? payload.data
-        : [];
+          ? payload.data
+          : [];
 
-      // Filter products belonging to current supplier (or unassigned demo products)
       const supplierList = list.filter(
         (p) => !p.supplierId || p.supplierId === user?.id
       );
@@ -50,27 +60,24 @@ function SupplierProducts() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchProducts();
   }, [user?.id]);
 
   useEffect(() => {
+    const load = async () => {
+      await fetchProducts();
+    };
+    void load();
+  }, [fetchProducts]);
+
+  useEffect(() => {
     if (!socket) return;
-
-    const handleProductRefresh = () => {
-      fetchProducts();
-    };
-
-    socket.on('inventory:updated', handleProductRefresh);
-    socket.on('order:created', handleProductRefresh);
-
+    socket.on('inventory:updated', fetchProducts);
+    socket.on('order:created', fetchProducts);
     return () => {
-      socket.off('inventory:updated', handleProductRefresh);
-      socket.off('order:created', handleProductRefresh);
+      socket.off('inventory:updated', fetchProducts);
+      socket.off('order:created', fetchProducts);
     };
-  }, [socket]);
+  }, [socket, fetchProducts]);
 
   const handleCreateOrUpdate = async (formData) => {
     try {
@@ -103,6 +110,27 @@ function SupplierProducts() {
     }
   };
 
+  const filteredProducts = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return products.filter((p) => {
+      const matchesSearch =
+        !query ||
+        p.name?.toLowerCase().includes(query) ||
+        p.description?.toLowerCase().includes(query);
+      const matchesFilter =
+        stockFilter === 'ALL' ||
+        (stockFilter === 'LOW' && p.stock < 25) ||
+        (stockFilter === 'IN_STOCK' && p.stock >= 25);
+      return matchesSearch && matchesFilter;
+    });
+  }, [products, search, stockFilter]);
+
+  const lowStockCount = products.filter((p) => p.stock < 25).length;
+  const totalValuation = products.reduce(
+    (sum, p) => sum + Number(p.price || 0) * Number(p.stock || 0),
+    0
+  );
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -114,67 +142,88 @@ function SupplierProducts() {
   return (
     <DashboardLayout>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-secondary">My Products</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Manage your catalog, update inventory counts, and review pricing.
-          </p>
-        </div>
+        <p className="text-slate-500 text-sm">
+          Manage your supplied catalog, adjust unit pricing, and monitor low-stock SKUs.
+        </p>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <Link
             to="/supplier/forecast"
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-secondary hover:border-slate-300 text-sm font-semibold rounded-xl shadow-sm transition"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 text-sm font-semibold rounded-xl shadow-xs transition"
           >
-            <FaBrain className="text-primary" />
+            <FaBrain className="text-indigo-600" />
             Demand Forecast
           </Link>
 
           <button
+            type="button"
             onClick={() => {
               setEditingProduct(null);
               setIsModalOpen(true);
             }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 transition"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-indigo-600/20 transition cursor-pointer"
           >
             <FaPlus className="text-xs" />
-            Add New Product
+            Add Product
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-[24px] p-6 shadow-card">
-        <ProductTable
-          products={products}
-          onEdit={(prod) => {
-            setEditingProduct(prod);
-            setIsModalOpen(true);
-          }}
-          onDelete={(prod) => setDeletingProduct(prod)}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <StatCard title="My Products" value={products.length} icon={<FaBox />} />
+        <StatCard
+          title="Low / Critical Stock"
+          value={lowStockCount}
+          icon={<FaExclamationTriangle />}
+        />
+        <StatCard
+          title="Stock Valuation"
+          value={formatCurrency(totalValuation)}
+          icon={<FaMoneyBillWave />}
         />
       </div>
 
-      {isModalOpen && (
-        <ProductModal
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setEditingProduct(null);
-          }}
-          onSubmit={handleCreateOrUpdate}
-          product={editingProduct}
-        />
-      )}
+      <SearchFilterBar
+        search={search}
+        onSearchChange={setSearch}
+        placeholder="Search your products..."
+        filters={STOCK_FILTERS}
+        activeFilter={stockFilter}
+        onFilterChange={setStockFilter}
+        resultCount={filteredProducts.length}
+      />
 
-      {deletingProduct && (
-        <ConfirmDialog
-          isOpen={Boolean(deletingProduct)}
-          title="Delete Product"
-          message={`Are you sure you want to delete "${deletingProduct.name}"? This action cannot be undone.`}
-          onConfirm={handleDelete}
-          onCancel={() => setDeletingProduct(null)}
-        />
-      )}
+      <ProductTable
+        products={filteredProducts}
+        onEdit={(prod) => {
+          setEditingProduct(prod);
+          setIsModalOpen(true);
+        }}
+        onDelete={(prod) => setDeletingProduct(prod)}
+      />
+
+      <ProductModal
+        key={editingProduct?.id || 'new-product'}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingProduct(null);
+        }}
+        onSave={handleCreateOrUpdate}
+        editingProduct={editingProduct}
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(deletingProduct)}
+        title="Delete Product"
+        message={
+          deletingProduct
+            ? `Are you sure you want to delete "${deletingProduct.name}"? This action cannot be undone.`
+            : ''
+        }
+        onConfirm={handleDelete}
+        onCancel={() => setDeletingProduct(null)}
+      />
     </DashboardLayout>
   );
 }
