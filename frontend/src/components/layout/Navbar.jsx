@@ -3,6 +3,7 @@ import { FaBars, FaSignOutAlt } from 'react-icons/fa';
 
 import { useAuth } from '../../context/useAuth';
 import NotificationDropdown from '../common/NotificationDropdown';
+import { getInitials } from '../../utils/formatters';
 
 const PAGE_TITLES = {
   '/admin': 'Executive Overview',
@@ -16,13 +17,6 @@ const PAGE_TITLES = {
   '/supplier/forecast': 'AI Demand Forecasting',
   '/notifications': 'Notifications Center'
 };
-
-function getInitials(name) {
-  if (!name) return 'U';
-  const parts = String(name).trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
 
 function Navbar({ onMenuOpen }) {
   const navigate = useNavigate();
