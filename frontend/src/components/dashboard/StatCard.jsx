@@ -1,69 +1,20 @@
-function StatCard({
-  title,
-  value,
-  icon
-}) {
-
+function StatCard({ title, value, icon }) {
   return (
-
-    <div
-      className="
-      bg-white
-      rounded-[24px]
-      p-6
-      shadow-card
-      hover:-translate-y-1
-      transition
-      duration-300
-      "
-    >
-
-      <div
-        className="
-        flex justify-between
-        items-center
-        "
-      >
-
-        <div>
-
-          <p
-            className="
-            text-gray-500
-            text-sm
-            "
-          >
+    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-card hover:border-indigo-200 hover:-translate-y-0.5 transition duration-200">
+      <div className="flex justify-between items-center gap-3">
+        <div className="min-w-0">
+          <p className="text-slate-500 text-xs font-semibold uppercase tracking-wide truncate">
             {title}
           </p>
-
-          <h1
-            className="
-            text-3xl
-            font-bold
-            mt-2
-            text-secondary
-            "
-          >
+          <p className="font-display text-2xl sm:text-3xl font-bold mt-1.5 text-slate-900 truncate">
             {value}
-          </h1>
-
+          </p>
         </div>
 
-        <div
-          className="
-          flex h-12 w-12
-          items-center justify-center
-          rounded-2xl
-          bg-orange-50
-          text-2xl
-          text-primary
-          "
-        >
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-xl text-indigo-600 border border-indigo-100">
           {icon}
         </div>
-
       </div>
-
     </div>
   );
 }

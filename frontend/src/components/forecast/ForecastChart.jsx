@@ -66,7 +66,7 @@ export default function ForecastChart({ forecastData }) {
             />
             <Bar dataKey="Current Stock" fill="#3b82f6" radius={[8, 8, 0, 0]} maxBarSize={60} />
             <Bar dataKey="Recent 30d Sales" fill="#64748b" radius={[8, 8, 0, 0]} maxBarSize={60} />
-            <Bar dataKey="Projected Demand" fill="#f97316" radius={[8, 8, 0, 0]} maxBarSize={60} />
+            <Bar dataKey="Projected Demand" fill="#4f46e5" radius={[8, 8, 0, 0]} maxBarSize={60} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -76,9 +76,9 @@ export default function ForecastChart({ forecastData }) {
           <p className="text-[11px] text-blue-700 font-medium">Current Stock</p>
           <p className="text-lg font-bold text-blue-900">{forecastData.currentStock} units</p>
         </div>
-        <div className="bg-orange-50/60 p-2.5 rounded-xl">
-          <p className="text-[11px] text-orange-700 font-medium">Projected Next Month</p>
-          <p className="text-lg font-bold text-orange-900">{forecastData.predictedDemand} units</p>
+        <div className="bg-indigo-50/60 p-2.5 rounded-xl">
+          <p className="text-[11px] text-indigo-700 font-medium">Projected Next Month</p>
+          <p className="text-lg font-bold text-indigo-900">{forecastData.predictedDemand} units</p>
         </div>
         <div className={`p-2.5 rounded-xl ${forecastData.projectedShortage > 0 ? 'bg-rose-50/60' : 'bg-emerald-50/60'}`}>
           <p className={`text-[11px] font-medium ${forecastData.projectedShortage > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>

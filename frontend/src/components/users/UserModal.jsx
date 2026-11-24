@@ -228,7 +228,7 @@ function UserModal({
             px-5 py-3
             rounded-xl
             w-full
-            hover:bg-orange-600
+            hover:bg-indigo-700
             transition
             "
           >

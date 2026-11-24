@@ -109,7 +109,7 @@ function SupplierDashboard() {
 
         <Link
           to="/supplier/forecast"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition w-fit"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 transition w-fit"
         >
           <FaBrain />
           AI Demand Forecasts
@@ -154,7 +154,7 @@ function SupplierDashboard() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-orange-100 rounded-xl text-primary">
+                <div className="p-2 bg-indigo-100 rounded-xl text-primary">
                   <FaBrain />
                 </div>
                 <h3 className="font-bold text-secondary">

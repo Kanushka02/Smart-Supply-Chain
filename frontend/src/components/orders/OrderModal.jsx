@@ -185,7 +185,7 @@ function OrderModal({
             text-white
             px-5 py-3
             rounded-xl
-            hover:bg-orange-600
+            hover:bg-indigo-700
             transition
             "
           >

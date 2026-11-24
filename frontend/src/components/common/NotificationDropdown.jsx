@@ -14,6 +14,19 @@ function NotificationDropdown() {
   const { socket } = useSocket();
   const navigate = useNavigate();
 
+  const fetchUnreadNotifications = async () => {
+    try {
+      setLoading(true);
+      const response = await notificationService.getUnreadNotifications();
+      setNotifications(response.data.notifications);
+      setUnreadCount(response.data.unreadCount);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch unread notifications on mount
   useEffect(() => {
     fetchUnreadNotifications();
@@ -60,20 +73,6 @@ function NotificationDropdown() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
-  const fetchUnreadNotifications = async () => {
-    try {
-      setLoading(true);
-      const response = await notificationService.getUnreadNotifications();
-      setNotifications(response.data.notifications);
-      setUnreadCount(response.data.unreadCount);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-      toast.error('Failed to fetch notifications');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleMarkAsRead = async (id) => {
     try {
@@ -134,12 +133,14 @@ function NotificationDropdown() {
     <div className="relative" ref={dropdownRef}>
       {/* Bell Icon */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 hover:bg-gray-100 rounded-full transition"
+        aria-label="Toggle notifications"
+        className="relative p-2.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
       >
-        <FaBell className="text-xl text-primary" />
+        <FaBell className="text-lg" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+          <span className="absolute -top-0.5 -right-0.5 bg-rose-600 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center ring-2 ring-white">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -147,7 +148,7 @@ function NotificationDropdown() {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-200/90 z-50 overflow-hidden">
           {/* Header */}
           <div className="flex justify-between items-center p-4 border-b border-gray-200">
             <h3 className="font-semibold text-lg text-gray-800">
@@ -242,7 +243,7 @@ function NotificationDropdown() {
                   navigate('/notifications');
                   setIsOpen(false);
                 }}
-                className="w-full text-center text-sm font-semibold text-primary hover:text-orange-600 transition"
+                className="w-full text-center text-sm font-semibold text-primary hover:text-indigo-700 transition"
               >
                 View All Notifications
               </button>

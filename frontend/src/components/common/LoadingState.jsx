@@ -15,7 +15,7 @@ function LoadingState({
       <Oval
         height={52}
         width={52}
-        color="#f97316"
+        color="#4f46e5"
         secondaryColor="#e5e7eb"
         strokeWidth={3}
         strokeWidthSecondary={3}

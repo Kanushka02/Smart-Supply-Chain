@@ -149,7 +149,7 @@ export default function ForecastDashboard() {
             <h1 className="text-3xl font-bold text-secondary">
               AI Demand Forecasting
             </h1>
-            <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 border border-orange-200">
+            <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200">
               <FaRobot />
               Machine Learning
             </span>
@@ -181,7 +181,7 @@ export default function ForecastDashboard() {
           <button
             onClick={handleRunRiskAudit}
             disabled={auditScanning}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-primary text-white hover:bg-orange-600 shadow-sm transition text-xs font-semibold disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-primary text-white hover:bg-indigo-700 shadow-sm transition text-xs font-semibold disabled:opacity-50"
             title="Scan catalog for stock shortages and dispatch real-time notifications"
           >
             <FaBell className={auditScanning ? 'animate-bounce' : ''} />
@@ -228,7 +228,7 @@ export default function ForecastDashboard() {
         <div className="lg:col-span-5 bg-white rounded-[24px] p-6 shadow-card flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 bg-orange-100 rounded-xl text-primary">
+              <div className="p-2 bg-indigo-100 rounded-xl text-primary">
                 <FaBrain className="text-lg" />
               </div>
               <h2 className="text-lg font-bold text-secondary">
@@ -379,7 +379,7 @@ export default function ForecastDashboard() {
                     key={f.productId}
                     className={`hover:bg-slate-50/80 transition ${
                       selectedProductId === f.productId.toString()
-                        ? 'bg-orange-50/40 font-medium'
+                        ? 'bg-indigo-50/40 font-medium'
                         : ''
                     }`}
                   >

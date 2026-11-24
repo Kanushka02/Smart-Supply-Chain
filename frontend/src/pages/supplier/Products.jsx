@@ -135,7 +135,7 @@ function SupplierProducts() {
               setEditingProduct(null);
               setIsModalOpen(true);
             }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 transition"
           >
             <FaPlus className="text-xs" />
             Add New Product
