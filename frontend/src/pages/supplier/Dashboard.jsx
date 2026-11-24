@@ -96,15 +96,24 @@ function SupplierDashboard() {
   return (
     <DashboardLayout>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <p className="text-slate-500 text-sm">
-          Welcome back,{' '}
-          <span className="font-semibold text-slate-900">{user?.name}</span>.
-          Monitor your catalog, incoming orders, and AI inventory forecasts.
-        </p>
+        <div>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h1 className="font-display text-2xl font-bold text-slate-900">
+              Welcome back, {user?.name || 'Partner'}
+            </h1>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Live Workspace
+            </span>
+          </div>
+          <p className="text-slate-500 text-sm mt-1">
+            Monitor your catalog, incoming orders, and AI inventory forecasts.
+          </p>
+        </div>
 
         <Link
           to="/supplier/forecast"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-indigo-600/20 transition w-fit"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-indigo-600/20 transition w-fit shrink-0"
         >
           <FaBrain />
           AI Demand Forecasts
