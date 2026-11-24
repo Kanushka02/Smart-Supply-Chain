@@ -17,7 +17,7 @@ const normalizeRole = (role, fallback = SUPPLIER_ROLE) => {
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, companyName, phone } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -26,14 +26,23 @@ exports.register = async (req, res) => {
       });
     }
 
+    if (String(password).length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters long'
+      });
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email: normalizedEmail }
     });
 
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'User already exists'
+        message: 'An account with this email already exists'
       });
     }
 
@@ -41,9 +50,11 @@ exports.register = async (req, res) => {
 
     const user = await prisma.user.create({
       data: {
-        name,
-        email,
+        name: String(name).trim(),
+        email: normalizedEmail,
         password: hashedPassword,
+        companyName: companyName ? String(companyName).trim() : null,
+        phone: phone ? String(phone).trim() : null,
         role: normalizeRole(undefined, SUPPLIER_ROLE)
       }
     });
@@ -55,6 +66,8 @@ exports.register = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
+        companyName: user.companyName,
+        phone: user.phone,
         role: user.role
       }
     });
@@ -76,14 +89,23 @@ exports.login = async (req, res) => {
       });
     }
 
+    const normalizedEmail = String(email).trim().toLowerCase();
+
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email: normalizedEmail }
     });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'No account found for this email'
+      });
+    }
+
+    if (user.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        message: 'This account is deactivated. Contact your administrator.'
       });
     }
 
@@ -125,6 +147,7 @@ exports.login = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
+        companyName: user.companyName,
         role: user.role
       }
     });
