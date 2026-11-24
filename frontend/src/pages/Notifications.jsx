@@ -1,60 +1,93 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaBell, FaTrash, FaCheckCircle, FaInfoCircle, FaExclamationTriangle, FaTimesCircle, FaRobot } from 'react-icons/fa';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  FaBell,
+  FaTrash,
+  FaCheckCircle,
+  FaInfoCircle,
+  FaExclamationTriangle,
+  FaTimesCircle,
+  FaRobot,
+  FaCheck
+} from 'react-icons/fa';
 import toast from 'react-hot-toast';
-import notificationService from '../services/notificationService';
+
+import DashboardLayout from '../components/layout/DashboardLayout';
 import LoadingState from '../components/common/LoadingState';
+import ConfirmDialog from '../components/common/ConfirmDialog';
+import notificationService from '../services/notificationService';
+import { formatDate } from '../utils/formatters';
+
+const FILTER_TABS = [
+  { label: 'All', value: 'ALL' },
+  { label: 'Critical Shortages', value: 'CRITICAL_SHORTAGE' },
+  { label: 'Potential Shortages', value: 'POTENTIAL_SHORTAGE' },
+  { label: 'Warnings', value: 'WARNING' },
+  { label: 'Info', value: 'INFO' },
+  { label: 'Success', value: 'SUCCESS' }
+];
+
+function getTypeStyle(type) {
+  switch (type) {
+    case 'SUCCESS':
+      return {
+        icon: <FaCheckCircle className="text-emerald-600" />,
+        iconBg: 'bg-emerald-50 border-emerald-200'
+      };
+    case 'CRITICAL_SHORTAGE':
+    case 'ERROR':
+      return {
+        icon: <FaTimesCircle className="text-rose-600" />,
+        iconBg: 'bg-rose-50 border-rose-200'
+      };
+    case 'POTENTIAL_SHORTAGE':
+    case 'WARNING':
+      return {
+        icon: <FaExclamationTriangle className="text-amber-600" />,
+        iconBg: 'bg-amber-50 border-amber-200'
+      };
+    default:
+      return {
+        icon: <FaInfoCircle className="text-indigo-600" />,
+        iconBg: 'bg-indigo-50 border-indigo-200'
+      };
+  }
+}
 
 function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [total, setTotal] = useState(0);
   const [filterType, setFilterType] = useState('ALL');
-  const navigate = useNavigate();
+  const [confirmState, setConfirmState] = useState({ type: null, id: null });
 
-  useEffect(() => {
-    fetchNotifications();
-  }, [page]);
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
       const response = await notificationService.getAllNotifications(page, limit);
-      setNotifications(response.data.data);
-      setTotal(response.data.pagination.total);
+      setNotifications(response.data.data || []);
+      setTotal(response.data.pagination?.total || 0);
     } catch (error) {
       console.error('Error fetching notifications:', error);
       toast.error('Failed to fetch notifications');
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, limit]);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this notification?')) {
-      return;
-    }
-
-    try {
-      await notificationService.deleteNotification(id);
-      setNotifications((prev) => prev.filter((notif) => notif.id !== id));
-      setTotal((prev) => prev - 1);
-      toast.success('Notification deleted');
-    } catch (error) {
-      console.error('Error deleting notification:', error);
-      toast.error('Failed to delete notification');
-    }
-  };
+  useEffect(() => {
+    const load = async () => {
+      await fetchNotifications();
+    };
+    void load();
+  }, [fetchNotifications]);
 
   const handleMarkAsRead = async (id) => {
     try {
       await notificationService.markAsRead(id);
       setNotifications((prev) =>
-        prev.map((notif) =>
-          notif.id === id ? { ...notif, isRead: true } : notif
-        )
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
       );
       toast.success('Marked as read');
     } catch (error) {
@@ -63,236 +96,257 @@ function NotificationsPage() {
     }
   };
 
-  const handleDeleteAll = async () => {
-    if (!window.confirm('Are you sure you want to delete all notifications?')) {
-      return;
-    }
-
+  const handleMarkAllRead = async () => {
     try {
-      await notificationService.deleteAllNotifications();
-      setNotifications([]);
-      setTotal(0);
-      setPage(1);
-      toast.success('All notifications deleted');
+      await notificationService.markAllAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      toast.success('All notifications marked as read');
     } catch (error) {
-      console.error('Error deleting all notifications:', error);
-      toast.error('Failed to delete all notifications');
+      console.error('Error marking all as read:', error);
+      toast.error('Failed to mark all as read');
     }
   };
 
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case 'SUCCESS':
-        return <FaCheckCircle className="text-green-500" />;
-      case 'CRITICAL_SHORTAGE':
-      case 'ERROR':
-        return <FaTimesCircle className="text-red-500" />;
-      case 'POTENTIAL_SHORTAGE':
-      case 'WARNING':
-        return <FaExclamationTriangle className="text-amber-500" />;
-      default:
-        return <FaInfoCircle className="text-blue-500" />;
+  const executeConfirmedDelete = async () => {
+    try {
+      if (confirmState.type === 'ALL') {
+        await notificationService.deleteAllNotifications();
+        setNotifications([]);
+        setTotal(0);
+        setPage(1);
+        toast.success('All notifications cleared');
+      } else if (confirmState.id) {
+        await notificationService.deleteNotification(confirmState.id);
+        setNotifications((prev) =>
+          prev.filter((n) => n.id !== confirmState.id)
+        );
+        setTotal((prev) => Math.max(0, prev - 1));
+        toast.success('Notification deleted');
+      }
+    } catch (error) {
+      console.error('Delete notification error:', error);
+      toast.error('Failed to delete notification');
+    } finally {
+      setConfirmState({ type: null, id: null });
     }
   };
-
-  const getNotificationBgColor = (type) => {
-    switch (type) {
-      case 'SUCCESS':
-        return 'bg-green-50 border-l-4 border-green-500';
-      case 'CRITICAL_SHORTAGE':
-      case 'ERROR':
-        return 'bg-red-50 border-l-4 border-red-500';
-      case 'POTENTIAL_SHORTAGE':
-      case 'WARNING':
-        return 'bg-amber-50 border-l-4 border-amber-500';
-      default:
-        return 'bg-blue-50 border-l-4 border-blue-500';
-    }
-  };
-
-  const filterTabs = [
-    { label: 'All', value: 'ALL' },
-    { label: 'Critical Shortages', value: 'CRITICAL_SHORTAGE' },
-    { label: 'Potential Shortages', value: 'POTENTIAL_SHORTAGE' },
-    { label: 'Warnings', value: 'WARNING' },
-    { label: 'Info', value: 'INFO' },
-    { label: 'Success', value: 'SUCCESS' }
-  ];
 
   const filteredNotifications =
     filterType === 'ALL'
       ? notifications
       : notifications.filter((notif) => notif.type === filterType);
 
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
   const totalPages = Math.ceil(total / limit);
 
-  if (loading && notifications.length === 0) {
-    return <LoadingState />;
-  }
-
   return (
-    <div className="p-6 bg-background min-h-screen">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3">
-          <FaBell className="text-2xl text-primary" />
-          <h1 className="text-3xl font-bold text-secondary">Notifications</h1>
-        </div>
-        <div className="flex gap-2">
-          {total > 0 && (
+    <DashboardLayout>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <p className="text-sm text-slate-500">
+          Real-time order updates, AI stockout risk alerts, and system activity history.
+        </p>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          {unreadCount > 0 && (
             <button
-              onClick={handleDeleteAll}
-              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
+              type="button"
+              onClick={handleMarkAllRead}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition cursor-pointer"
             >
-              Delete All
+              <FaCheck className="text-indigo-600" />
+              Mark All Read
             </button>
           )}
-          <button
-            onClick={() => navigate(-1)}
-            className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
-          >
-            Back
-          </button>
+          {total > 0 && (
+            <button
+              type="button"
+              onClick={() => setConfirmState({ type: 'ALL', id: null })}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 transition cursor-pointer"
+            >
+              <FaTrash className="text-[11px]" />
+              Clear All
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        {filterTabs.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => {
-              setFilterType(tab.value);
-              setPage(1);
-            }}
-            className={`px-3.5 py-1.5 text-sm font-medium rounded-lg transition ${
-              filterType === tab.value
-                ? 'bg-primary text-white shadow-sm'
-                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Notifications List */}
-      {filteredNotifications.length > 0 ? (
-        <div className="space-y-4">
-          {filteredNotifications.map((notification) => (
-            <div
-              key={notification.id}
-              className={`p-4 rounded-lg shadow-card hover:shadow-lg transition ${getNotificationBgColor(
-                notification.type
-              )} ${!notification.isRead ? 'ring-2 ring-primary ring-opacity-30' : ''}`}
+      {/* Filter Pills */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-card p-3.5 mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          {FILTER_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              onClick={() => {
+                setFilterType(tab.value);
+                setPage(1);
+              }}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                filterType === tab.value
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
+              }`}
             >
-              <div className="flex justify-between items-start gap-4">
-                <div className="flex gap-4 flex-1">
-                  <div className="text-2xl mt-1">
-                    {getNotificationIcon(notification.type)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-lg text-gray-800">
-                        {notification.title}
-                      </h3>
-                      {(notification.type === 'CRITICAL_SHORTAGE' || notification.type === 'POTENTIAL_SHORTAGE') && (
-                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                          notification.type === 'CRITICAL_SHORTAGE'
-                            ? 'bg-red-100 text-red-800 border border-red-200'
-                            : 'bg-amber-100 text-amber-800 border border-amber-200'
-                        }`}>
-                          <FaRobot className="text-[10px]" /> AI Demand Alert
-                        </span>
-                      )}
-                      {!notification.isRead && (
-                        <span className="bg-primary text-white text-xs px-2 py-0.5 rounded-full">
-                          Unread
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-600 mt-2">
-                      {notification.message}
-                    </p>
-                    <span className="text-sm text-gray-500 mt-2 inline-block">
-                      {new Date(notification.createdAt).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  {!notification.isRead && (
-                    <button
-                      onClick={() => handleMarkAsRead(notification.id)}
-                      className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition text-sm whitespace-nowrap"
-                    >
-                      Mark Read
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleDelete(notification.id)}
-                    className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition"
-                  >
-                    <FaTrash />
-                  </button>
-                </div>
-              </div>
-            </div>
+              {tab.label}
+            </button>
           ))}
         </div>
+        <span className="text-xs font-medium text-slate-400 tabular-nums">
+          {total} total · {unreadCount} unread
+        </span>
+      </div>
+
+      {loading && notifications.length === 0 ? (
+        <LoadingState label="Loading notifications" />
+      ) : filteredNotifications.length > 0 ? (
+        <div className="space-y-3">
+          {filteredNotifications.map((notification) => {
+            const style = getTypeStyle(notification.type);
+            const isAiAlert =
+              notification.type === 'CRITICAL_SHORTAGE' ||
+              notification.type === 'POTENTIAL_SHORTAGE';
+
+            return (
+              <div
+                key={notification.id}
+                className={`bg-white rounded-2xl border p-4 sm:p-5 shadow-card transition ${
+                  notification.isRead
+                    ? 'border-slate-200/80'
+                    : 'border-indigo-300 ring-2 ring-indigo-500/10'
+                }`}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                    <div
+                      className={`w-10 h-10 rounded-xl border flex items-center justify-center text-base shrink-0 ${style.iconBg}`}
+                    >
+                      {style.icon}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-display font-bold text-sm sm:text-base text-slate-900">
+                          {notification.title}
+                        </h3>
+                        {isAiAlert && (
+                          <span
+                            className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                              notification.type === 'CRITICAL_SHORTAGE'
+                                ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                : 'bg-amber-50 text-amber-700 border-amber-200'
+                            }`}
+                          >
+                            <FaRobot className="text-[10px]" />
+                            AI Alert
+                          </span>
+                        )}
+                        {!notification.isRead && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
+                            Unread
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-sm text-slate-600 mt-1 leading-relaxed">
+                        {notification.message}
+                      </p>
+
+                      <p className="text-xs text-slate-400 mt-2">
+                        {formatDate(notification.createdAt)} ·{' '}
+                        {new Date(notification.createdAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-start">
+                    {!notification.isRead && (
+                      <button
+                        type="button"
+                        onClick={() => handleMarkAsRead(notification.id)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition cursor-pointer"
+                      >
+                        <FaCheck className="text-[10px]" />
+                        Mark Read
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      aria-label="Delete notification"
+                      onClick={() =>
+                        setConfirmState({ type: 'SINGLE', id: notification.id })
+                      }
+                      className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       ) : (
-        <div className="text-center py-12">
-          <FaBell className="text-6xl text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 text-lg">
-            {total === 0 ? 'No notifications yet' : 'No notifications matching the filter'}
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-card p-12 text-center">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-2xl">
+            <FaBell />
+          </div>
+          <h3 className="font-display text-lg font-bold text-slate-800 mb-1">
+            {total === 0 ? 'No notifications yet' : 'No matching notifications'}
+          </h3>
+          <p className="text-sm text-slate-500">
+            {total === 0
+              ? 'Order confirmations and AI stockout alerts will show up here.'
+              : 'Try selecting another filter tab above.'}
           </p>
         </div>
       )}
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mt-8">
+        <div className="flex justify-center items-center gap-2 mt-6">
           <button
+            type="button"
             onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
             disabled={page === 1}
-            className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed transition"
           >
             Previous
           </button>
-
-          <div className="flex gap-2">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const pageNum = Math.max(1, page - 2) + i;
-              if (pageNum > totalPages) return null;
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setPage(pageNum)}
-                  className={`px-3 py-2 rounded-lg transition ${
-                    pageNum === page
-                      ? 'bg-primary text-white'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-          </div>
-
+          <span className="text-xs font-semibold text-slate-500 px-3">
+            Page {page} of {totalPages}
+          </span>
           <button
+            type="button"
             onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
             disabled={page === totalPages}
-            className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed transition"
           >
             Next
           </button>
-
-          <span className="text-gray-600">
-            Page {page} of {totalPages}
-          </span>
         </div>
       )}
-    </div>
+
+      <ConfirmDialog
+        isOpen={Boolean(confirmState.type)}
+        title={
+          confirmState.type === 'ALL'
+            ? 'Clear all notifications'
+            : 'Delete notification'
+        }
+        message={
+          confirmState.type === 'ALL'
+            ? 'Delete every notification in your inbox? This cannot be undone.'
+            : 'Remove this notification permanently?'
+        }
+        confirmText={confirmState.type === 'ALL' ? 'Clear All' : 'Delete'}
+        onCancel={() => setConfirmState({ type: null, id: null })}
+        onConfirm={executeConfirmedDelete}
+      />
+    </DashboardLayout>
   );
 }
 
